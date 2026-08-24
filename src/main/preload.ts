@@ -45,6 +45,23 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('get-settings'),
 
   saveSettings: (settings: AppSettings): Promise<boolean> =>
-    ipcRenderer.invoke('save-settings', settings)
+    ipcRenderer.invoke('save-settings', settings),
+
+  scanPaths: (paths: string[]) =>
+    ipcRenderer.invoke('scan-paths', paths),
+
+  batchExport: (targetDir: string, items: any[]) =>
+    ipcRenderer.invoke('batch-export', targetDir, items),
+
+  getInitialPaths: (): Promise<string[]> =>
+    ipcRenderer.invoke('get-initial-paths'),
+
+  onOpenExternalPaths: (callback: (paths: string[]) => void) => {
+    const handler = (_event: any, paths: string[]) => callback(paths);
+    ipcRenderer.on('open-external-paths', handler);
+    return () => {
+      ipcRenderer.removeListener('open-external-paths', handler);
+    };
+  }
 });
 

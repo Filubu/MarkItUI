@@ -8,18 +8,20 @@ Eine moderne, elegante Desktop-App (mit **Obsidian Dark Glassmorphism Theme**), 
 
 Lade einfach die Installationsdatei herunter und starte das Setup:
 
-👉 **[MarkItUI Setup 2.4.0.exe](file:///c:/Users/filka/Documents/Code/markitdown_tool/release/MarkItUI%20Setup%202.4.0.exe)**
+👉 **[MarkItUI Setup 2.5.0.exe](file:///c:/Users/filka/Documents/Code/markitdown_tool/release/MarkItUI%20Setup%202.5.0.exe)**
 
 ### Was der Installer macht:
 - 🖥️ **Windows Setup Assistent** mit freier Zielordner-Auswahl (z. B. auf deiner SSD oder Festplatte).
 - 📌 **Desktop-Verknüpfung** und **Startmenü-Eintrag** werden automatisch angelegt.
+- ⚡ **Windows Explorer Kontextmenü**: Rechtsklick auf Dateien (*„Mit MarkItUI konvertieren“*) und Ordner (*„Ordner mit MarkItUI umwandeln“*).
 - 🔄 **Saubere Deinstallation** über die Windows-Systemsteuerung / Apps & Features unterstützt.
 
 ---
 
 ## ✨ Features
 
-- 🖱️ **Drag & Drop**: Einfach Dateien aus dem Download-Ordner (z. B. von *Itslearning*) in die App ziehen.
+- 🖱️ **Windows Explorer Rechtsklick & Drag & Drop**: Dateien oder ganze Ordner direkt aus dem Explorer mit MarkItUI öffnen und konvertieren.
+- 📦 **Ordner-Unzip & Batch-Export**: Wandelt ganze Ordnerstrukturen um und exportiert alle Dokumente in einem Schritt als saubere Markdown-Notizen.
 - ⚡ **1-Klick-Konvertierung**: Wandelt `.docx`, `.pdf`, `.pptx`, `.xlsx`, `.csv`, `.txt`, `.html` blitzschnell in Markdown um.
 - 👁️ **Obsidian-Live-Vorschau**:
   - **Vorschau-Tab**: Vollständig formatierte Ansicht mit Überschriften, Tabellen, Listen und Code-Blöcken.
@@ -27,7 +29,7 @@ Lade einfach die Installationsdatei herunter und starte das Setup:
 - 📁 **Intelligente Obsidian-Vault-Integration**:
   - **Feste Pfad-Hinterlegung**: Pfad zu deiner portablen SSD einmalig in den Einstellungen speichern.
   - **Automatische Fächer-/Ordner-Erkennung**: Dropdown listet alle Unterordner (z. B. `Mathe`, `Informatik`, `Deutsch`, `Aufgaben`) auf für 1-Klick-Ablage.
-  - **"Speichern unter..."**: Ermöglicht freies Speichern an jedem beliebigen Ort.
+  - **"Speichern unter..." & Breite Save-Bar**: Komfortables Bearbeiten von Dateinamen ohne Textabschneiden.
   - **Direktes Öffnen in Obsidian**: Nach dem Speichern kann die Notiz sofort über die Obsidian URI (`obsidian://open`) geöffnet werden.
 - 🏷️ **Automatisches YAML-Frontmatter**:
   - Fügt automatisch Metadaten wie `title`, `created`, `source_file`, `subject` und `tags` (z. B. `#schule`, `#itslearning`) ein.
@@ -49,5 +51,6 @@ npm run dev
 ```bash
 npm run dist:installer
 ```
-Der fertige Installer liegt in `release/MarkItUI Setup 2.4.0.exe`.
+Der fertige Installer liegt in `release/MarkItUI Setup 2.5.0.exe`.
+
 

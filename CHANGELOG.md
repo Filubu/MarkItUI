@@ -5,6 +5,20 @@ Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/) 
 
 ---
 
+## [2.5.0] - 2026-08-24
+
+### Added
+- **Windows Explorer Kontextmenü für Dateien**: Rechtsklick auf beliebige Dokumentdateien (.pdf, .docx, .pptx, .xlsx, .csv etc.) &rarr; *„Mit MarkItUI konvertieren“* öffnet/fokussiert MarkItUI und konvertiert die Datei sofort.
+- **Windows Explorer Kontextmenü für Ordner**: Rechtsklick auf Ordner im Explorer &rarr; *„Ordner mit MarkItUI umwandeln“* scannt den gesamten Ordner rekursiv nach unterstützten Dokumenten und lädt sie in die Queue.
+- **Ordner-Unzip & Batch-Export**: Neuer 1-Klick-Export-Button („Alle exportieren / Entpacken“) für Queues und Ordner, um alle konvertierten Dokumente mit relativer Ordnerstruktur als Markdown in einen Zielordner oder Vault zu speichern.
+- **Single-Instance Lock**: Bei erneuten Rechtsklick-Aktionen im Explorer wird die bestehende Instanz in den Vordergrund geholt und die Dateien sofort geladen.
+
+### Changed
+- **Verbreiterte Save-Bar**: Das Eingabefeld für Dateinamen wurde dynamisch auf `280px–500px` vergrößert, sodass lange Titel nicht mehr abgeschnitten werden und sich bequem bearbeiten lassen.
+- **Windows Taskleisten- & Startmenü-Icon Repariert**: Entfernen von `signAndEditExecutable: false`, sodass `resedit` das hochauflösende `build/icon.ico` direkt in die PE-Header der `MarkItUI.exe` injiziert.
+
+---
+
 ## [2.4.0] - 2026-08-24
 
 ### Added

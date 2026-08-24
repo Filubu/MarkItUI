@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Check, ArrowUpRight, FolderPlus, Tag } from 'lucide-react';
+import { Check, ArrowUpRight, FolderPlus, Tag, Archive } from 'lucide-react';
 import { AppSettings, FileQueueItem, FolderTreeNode, VaultRouting } from '../../shared/types';
 import { FolderTreePicker } from './FolderTreePicker';
 
@@ -9,8 +9,10 @@ interface QuickSaveBarProps {
   vaultSubfolders: string[];
   folderTree: FolderTreeNode[];
   vaultRouting: VaultRouting | null;
+  totalFilesCount?: number;
   onSaveToVault: (subfolder: string, fileName: string) => Promise<string | null>;
   onSaveCustom: (fileName: string) => Promise<string | null>;
+  onBatchExport?: () => void;
   onOpenInObsidian: (filePath: string) => void;
   onOpenSettings: () => void;
 }
@@ -21,8 +23,10 @@ export const QuickSaveBar: React.FC<QuickSaveBarProps> = ({
   vaultSubfolders,
   folderTree,
   vaultRouting,
+  totalFilesCount = 1,
   onSaveToVault,
   onSaveCustom,
+  onBatchExport,
   onOpenInObsidian,
   onOpenSettings
 }) => {
@@ -163,6 +167,20 @@ export const QuickSaveBar: React.FC<QuickSaveBarProps> = ({
         >
           Speichern unter...
         </button>
+
+        {/* Batch Export / Unzip if multiple files */}
+        {totalFilesCount > 1 && onBatchExport && (
+          <button
+            className="btn-glass batch-export-btn"
+            onClick={onBatchExport}
+            disabled={isSaving}
+            title="Alle konvertierten Notizen in einen Ordner entpacken/exportieren"
+          >
+            <Archive size={13} />
+            <span>Alle exportieren</span>
+            <span className="batch-count-badge">{totalFilesCount}</span>
+          </button>
+        )}
 
         {/* Open in Obsidian Link if saved */}
         {lastSavedPath && (

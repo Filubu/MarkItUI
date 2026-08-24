@@ -290,4 +290,105 @@ export function registerIpcHandlers(mainWindow: BrowserWindow) {
   ipcMain.handle('save-settings', async (_event, settings: AppSettings) => {
     return saveSettingsToDisk(settings);
   });
+
+  // Initial CLI / Explorer Paths
+  ipcMain.handle('get-initial-paths', async () => {
+    return initialCliPaths;
+  });
+
+  // Path scanner (recursive for directories, flat for files)
+  ipcMain.handle('scan-paths', async (_event, rawPaths: string[]) => {
+    const results: any[] = [];
+    const SUPPORTED_EXTENSIONS = new Set([
+      '.pdf', '.docx', '.doc', '.pptx', '.ppt', '.xlsx', '.xls',
+      '.csv', '.txt', '.html', '.htm', '.rtf', '.epub', '.xml', '.json', '.md'
+    ]);
+
+    function scanDir(dirPath: string, rootDir: string) {
+      try {
+        const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+        for (const entry of entries) {
+          const fullPath = path.join(dirPath, entry.name);
+          if (entry.isDirectory()) {
+            if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
+            scanDir(fullPath, rootDir);
+          } else if (entry.isFile()) {
+            const ext = path.extname(entry.name).toLowerCase();
+            if (SUPPORTED_EXTENSIONS.has(ext)) {
+              const stat = fs.statSync(fullPath);
+              const rel = path.relative(rootDir, fullPath);
+              results.push({
+                path: fullPath,
+                name: entry.name,
+                relativePath: rel,
+                size: stat.size,
+                extension: ext
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[Scanner] Fehler beim Scannen von', dirPath, err);
+      }
+    }
+
+    for (const p of rawPaths) {
+      if (!fs.existsSync(p)) continue;
+      try {
+        const stat = fs.statSync(p);
+        if (stat.isDirectory()) {
+          scanDir(p, p);
+        } else if (stat.isFile()) {
+          const ext = path.extname(p).toLowerCase();
+          results.push({
+            path: p,
+            name: path.basename(p),
+            relativePath: path.basename(p),
+            size: stat.size,
+            extension: ext
+          });
+        }
+      } catch (err) {
+        console.error('[ScanPaths] Fehler bei:', p, err);
+      }
+    }
+    return results;
+  });
+
+  // Batch Export (Unzip all converted Markdown files to target folder)
+  ipcMain.handle('batch-export', async (_event, targetDir: string, items: any[]) => {
+    if (!targetDir || !fs.existsSync(targetDir)) {
+      return { success: false, exportedCount: 0, error: 'Ungültiger Zielordner' };
+    }
+    let count = 0;
+    try {
+      for (const item of items) {
+        if (!item.content) continue;
+        let subDir = targetDir;
+        if (item.relativePath) {
+          const relDir = path.dirname(item.relativePath);
+          if (relDir && relDir !== '.') {
+            subDir = path.join(targetDir, relDir);
+            if (!fs.existsSync(subDir)) {
+              fs.mkdirSync(subDir, { recursive: true });
+            }
+          }
+        }
+        const cleanName = sanitizeFileName(item.fileName);
+        const targetFilePath = path.join(subDir, cleanName);
+        fs.writeFileSync(targetFilePath, item.content, 'utf-8');
+        count++;
+      }
+      return { success: true, exportedCount: count, targetDir };
+    } catch (err: any) {
+      console.error('[BatchExport] Fehler:', err);
+      return { success: false, exportedCount: count, error: err.message };
+    }
+  });
+}
+
+let initialCliPaths: string[] = [];
+
+export function setInitialCliPaths(paths: string[]) {
+  initialCliPaths = paths;
 }

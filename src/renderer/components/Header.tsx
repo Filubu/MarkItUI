@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, X, Settings, Eye, Columns, Code } from 'lucide-react';
+import { Plus, X, Settings, Eye, Columns, Code, Archive } from 'lucide-react';
 import { AppSettings, FileQueueItem } from '../../shared/types';
 
 interface HeaderProps {
@@ -10,6 +10,7 @@ interface HeaderProps {
   onSelectFile: (id: string) => void;
   onRemoveFile: (id: string) => void;
   onAddFiles: () => void;
+  onBatchExport?: () => void;
   viewMode: 'preview' | 'split' | 'raw';
   onChangeViewMode: (mode: 'preview' | 'split' | 'raw') => void;
 }
@@ -22,6 +23,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectFile,
   onRemoveFile,
   onAddFiles,
+  onBatchExport,
   viewMode,
   onChangeViewMode
 }) => {
@@ -95,6 +97,17 @@ export const Header: React.FC<HeaderProps> = ({
               <Code size={13} />
             </button>
           </div>
+        )}
+
+        {files.length > 1 && onBatchExport && (
+          <button
+            className="btn-glass batch-export-btn"
+            onClick={onBatchExport}
+            title={`Alle ${files.length} Notizen exportieren / entpacken`}
+          >
+            <Archive size={13} />
+            <span>Exportieren</span>
+          </button>
         )}
 
         <button className="btn-icon-minimal" onClick={onOpenSettings} title="Einstellungen">

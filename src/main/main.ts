@@ -1,8 +1,19 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
-import { registerIpcHandlers } from './ipcHandlers';
+import { registerIpcHandlers, setInitialCliPaths } from './ipcHandlers';
 
 let mainWindow: BrowserWindow | null = null;
+
+function extractFilePathsFromArgv(argv: string[]): string[] {
+  const startIndex = app.isPackaged ? 1 : 2;
+  return argv.slice(startIndex).filter((arg) => {
+    if (!arg) return false;
+    if (arg.startsWith('--')) return false;
+    if (arg.startsWith('-')) return false;
+    if (arg === '.') return false;
+    return true;
+  });
+}
 
 function createWindow() {
   const iconPath = path.join(__dirname, '../build/icon.png');
@@ -42,18 +53,40 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(() => {
-  createWindow();
+const gotTheLock = app.requestSingleInstanceLock();
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
+if (!gotTheLock) {
+  app.quit();
+} else {
+  const initialArgs = extractFilePathsFromArgv(process.argv);
+  setInitialCliPaths(initialArgs);
+
+  app.on('second-instance', (_event, commandLine) => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+
+      const incomingPaths = extractFilePathsFromArgv(commandLine);
+      if (incomingPaths.length > 0) {
+        mainWindow.webContents.send('open-external-paths', incomingPaths);
+      }
     }
   });
-});
+
+  app.whenReady().then(() => {
+    createWindow();
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        createWindow();
+      }
+    });
+  });
+}
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
+

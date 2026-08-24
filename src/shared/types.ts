@@ -71,6 +71,27 @@ export interface VaultRouting {
   routes: VaultRoute[];
 }
 
+export interface ScannedFileItem {
+  path: string;
+  name: string;
+  relativePath: string;
+  size: number;
+  extension: string;
+}
+
+export interface BatchExportItem {
+  fileName: string;
+  relativePath?: string;
+  content: string;
+}
+
+export interface BatchExportResult {
+  success: boolean;
+  exportedCount: number;
+  targetDir?: string;
+  error?: string;
+}
+
 export interface ElectronAPI {
   // Conversion
   convertDocument: (req: ConversionRequest) => Promise<ConversionResult>;
@@ -79,6 +100,8 @@ export interface ElectronAPI {
   selectFiles: () => Promise<string[]>;
   selectDirectory: (title?: string) => Promise<string | null>;
   saveFileDialog: (defaultFileName: string, defaultPath?: string) => Promise<string | null>;
+  scanPaths: (paths: string[]) => Promise<ScannedFileItem[]>;
+  batchExport: (targetDir: string, items: BatchExportItem[]) => Promise<BatchExportResult>;
   
   // Vault & Files
   getVaultSubfolders: (vaultPath: string) => Promise<string[]>;
@@ -94,6 +117,10 @@ export interface ElectronAPI {
   // Settings
   getSettings: () => Promise<AppSettings>;
   saveSettings: (settings: AppSettings) => Promise<boolean>;
+
+  // External / CLI Events
+  getInitialPaths: () => Promise<string[]>;
+  onOpenExternalPaths: (callback: (paths: string[]) => void) => () => void;
 }
 
 declare global {

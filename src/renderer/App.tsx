@@ -6,7 +6,7 @@ import { QuickSaveBar } from './components/QuickSaveBar';
 import { SettingsModal } from './components/SettingsModal';
 import { VaultRoutingModal } from './components/VaultRoutingModal';
 import { Toast, ToastMessage } from './components/Toast';
-import { AppSettings, FileQueueItem, FolderTreeNode, VaultRouting } from '../shared/types';
+import { AppSettings, FileQueueItem, FolderTreeNode, VaultRouting, ScannedFileItem } from '../shared/types';
 import { Upload, FolderOpen } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -73,7 +73,104 @@ export const App: React.FC = () => {
     }
   }, []);
 
-  // Initialize settings & vault data on startup
+  // Convert single file helper
+  const convertSingleFile = useCallback(async (fileItem: FileQueueItem, customSettings?: AppSettings) => {
+    const currentSettings = customSettings || settings;
+    setFiles((prev) =>
+      prev.map((f) => (f.id === fileItem.id ? { ...f, status: 'converting', error: undefined } : f))
+    );
+
+    try {
+      const res = await window.electronAPI.convertDocument({
+        filePath: fileItem.path,
+        addFrontmatter: currentSettings.addFrontmatter,
+        tags: currentSettings.defaultTags,
+        subject: fileItem.subject
+      });
+
+      if (res.success) {
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.id === fileItem.id
+              ? { ...f, status: 'success', markdown: res.markdown, error: undefined }
+              : f
+          )
+        );
+      } else {
+        setFiles((prev) =>
+          prev.map((f) =>
+            f.id === fileItem.id
+              ? { ...f, status: 'error', error: res.error || 'Konvertierungsfehler' }
+              : f
+          )
+        );
+        addToast('error', `Fehler: ${res.error}`);
+      }
+    } catch (err: any) {
+      setFiles((prev) =>
+        prev.map((f) =>
+          f.id === fileItem.id
+            ? { ...f, status: 'error', error: err.message || 'Unerwarteter Fehler' }
+            : f
+        )
+      );
+      addToast('error', `Fehler: ${err.message}`);
+    }
+  }, [settings, addToast]);
+
+  // Handle adding files & folders
+  const handleFilesAdded = useCallback(async (rawPaths: string[]) => {
+    if (!rawPaths || rawPaths.length === 0) return;
+
+    let scanned: ScannedFileItem[] = [];
+    try {
+      if (window.electronAPI && window.electronAPI.scanPaths) {
+        scanned = await window.electronAPI.scanPaths(rawPaths);
+      }
+    } catch (err) {
+      console.error('ScanPaths Fehler:', err);
+    }
+
+    if (!scanned || scanned.length === 0) {
+      scanned = rawPaths.map((p) => {
+        const name = p.split(/[\\/]/).pop() || p;
+        const ext = name.includes('.') ? '.' + name.split('.').pop() : '';
+        return {
+          path: p,
+          name: name,
+          relativePath: name,
+          size: 0,
+          extension: ext
+        };
+      });
+    }
+
+    const newItems: FileQueueItem[] = scanned.map((item) => ({
+      id: Math.random().toString(36).substring(2, 9),
+      path: item.path,
+      name: item.name,
+      size: item.size,
+      extension: item.extension,
+      status: 'idle',
+      ...(item.relativePath ? { relativePath: item.relativePath } : {})
+    } as any));
+
+    setFiles((prev) => [...prev, ...newItems]);
+
+    if (!selectedId && newItems.length > 0) {
+      setSelectedId(newItems[0].id);
+    } else if (newItems.length > 0) {
+      setSelectedId(newItems[0].id);
+    }
+
+    if (settings.autoConvertOnDrop) {
+      newItems.forEach((item) => {
+        convertSingleFile(item);
+      });
+    }
+  }, [selectedId, settings.autoConvertOnDrop, convertSingleFile]);
+
+  // Initialize settings & vault data on startup + external CLI args
   useEffect(() => {
     const init = async () => {
       try {
@@ -85,13 +182,31 @@ export const App: React.FC = () => {
               await loadVaultData(loaded.vaultPath);
             }
           }
+
+          // Check if app was started with file/folder arguments from Explorer
+          const initialPaths = await window.electronAPI.getInitialPaths();
+          if (initialPaths && initialPaths.length > 0) {
+            handleFilesAdded(initialPaths);
+          }
         }
       } catch (err) {
         console.error('Init-Fehler:', err);
       }
     };
     init();
-  }, [loadVaultData]);
+
+    // Listen for second instance args (e.g. Right click in Explorer while app is running)
+    if (window.electronAPI && window.electronAPI.onOpenExternalPaths) {
+      const cleanup = window.electronAPI.onOpenExternalPaths((paths) => {
+        if (paths && paths.length > 0) {
+          handleFilesAdded(paths);
+        }
+      });
+      return () => {
+        cleanup();
+      };
+    }
+  }, [loadVaultData, handleFilesAdded]);
 
   const handleSaveSettings = async (newSettings: AppSettings) => {
     const vaultChanged = newSettings.vaultPath !== settings.vaultPath;
@@ -132,78 +247,6 @@ export const App: React.FC = () => {
   const handleSkipRouting = () => {
     setIsRoutingOpen(false);
     setIsRoutingFirstTime(false);
-  };
-
-  const convertSingleFile = async (fileItem: FileQueueItem) => {
-    setFiles((prev) =>
-      prev.map((f) => (f.id === fileItem.id ? { ...f, status: 'converting', error: undefined } : f))
-    );
-
-    try {
-      const res = await window.electronAPI.convertDocument({
-        filePath: fileItem.path,
-        addFrontmatter: settings.addFrontmatter,
-        tags: settings.defaultTags,
-        subject: fileItem.subject
-      });
-
-      if (res.success) {
-        setFiles((prev) =>
-          prev.map((f) =>
-            f.id === fileItem.id
-              ? { ...f, status: 'success', markdown: res.markdown, error: undefined }
-              : f
-          )
-        );
-      } else {
-        setFiles((prev) =>
-          prev.map((f) =>
-            f.id === fileItem.id
-              ? { ...f, status: 'error', error: res.error || 'Konvertierungsfehler' }
-              : f
-          )
-        );
-        addToast('error', `Fehler: ${res.error}`);
-      }
-    } catch (err: any) {
-      setFiles((prev) =>
-        prev.map((f) =>
-          f.id === fileItem.id
-            ? { ...f, status: 'error', error: err.message || 'Unerwarteter Fehler' }
-            : f
-        )
-      );
-      addToast('error', `Fehler: ${err.message}`);
-    }
-  };
-
-  const handleFilesAdded = (paths: string[]) => {
-    const newItems: FileQueueItem[] = paths.map((p) => {
-      const name = p.split(/[\\/]/).pop() || p;
-      const ext = name.includes('.') ? '.' + name.split('.').pop() : '';
-      return {
-        id: Math.random().toString(36).substring(2, 9),
-        path: p,
-        name: name,
-        size: 0,
-        extension: ext,
-        status: 'idle'
-      };
-    });
-
-    setFiles((prev) => [...prev, ...newItems]);
-
-    if (!selectedId && newItems.length > 0) {
-      setSelectedId(newItems[0].id);
-    } else if (newItems.length > 0) {
-      setSelectedId(newItems[0].id);
-    }
-
-    if (settings.autoConvertOnDrop) {
-      newItems.forEach((item) => {
-        convertSingleFile(item);
-      });
-    }
   };
 
   const handleSelectFilesDialog = async () => {
@@ -293,6 +336,51 @@ export const App: React.FC = () => {
 
   const handleOpenInObsidian = async (filePath: string) => {
     await window.electronAPI.openInObsidian(settings.vaultPath, filePath);
+  };
+
+  // Batch Export all converted markdown notes into a selected directory
+  const handleBatchExport = async () => {
+    if (files.length === 0) return;
+
+    try {
+      const targetDir = await window.electronAPI.selectDirectory('Zielordner für Markdown-Export auswählen');
+      if (!targetDir) return;
+
+      const itemsToExport = files
+        .filter((f) => f.markdown && f.status === 'success')
+        .map((f) => {
+          const stem = f.name.substring(0, f.name.lastIndexOf('.')) || f.name;
+          const mdName = `${stem}.md`;
+          let relPath = (f as any).relativePath || mdName;
+          if (relPath.includes('.')) {
+            relPath = relPath.substring(0, relPath.lastIndexOf('.')) + '.md';
+          }
+          return {
+            fileName: mdName,
+            relativePath: relPath,
+            content: f.markdown!
+          };
+        });
+
+      if (itemsToExport.length === 0) {
+        addToast('error', 'Keine fertig konvertierten Notizen zum Exportieren vorhanden.');
+        return;
+      }
+
+      const res = await window.electronAPI.batchExport(targetDir, itemsToExport);
+      if (res.success) {
+        addToast(
+          'success',
+          `${res.exportedCount} Dokumente erfolgreich als Markdown entpackt`,
+          'Im Explorer zeigen',
+          () => window.electronAPI.openInExplorer(targetDir)
+        );
+      } else {
+        addToast('error', `Fehler beim Batch-Export: ${res.error}`);
+      }
+    } catch (err: any) {
+      addToast('error', `Batch-Export Fehler: ${err.message}`);
+    }
   };
 
   // Vault selection via onboarding
@@ -414,6 +502,7 @@ export const App: React.FC = () => {
         onSelectFile={setSelectedId}
         onRemoveFile={handleRemoveFile}
         onAddFiles={handleSelectFilesDialog}
+        onBatchExport={handleBatchExport}
         viewMode={viewMode}
         onChangeViewMode={setViewMode}
       />
@@ -438,8 +527,10 @@ export const App: React.FC = () => {
               vaultSubfolders={vaultSubfolders}
               folderTree={folderTree}
               vaultRouting={vaultRouting}
+              totalFilesCount={files.length}
               onSaveToVault={handleSaveToVault}
               onSaveCustom={handleSaveCustom}
+              onBatchExport={handleBatchExport}
               onOpenInObsidian={handleOpenInObsidian}
               onOpenSettings={() => setIsSettingsOpen(true)}
             />
