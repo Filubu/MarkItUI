@@ -1,0 +1,74 @@
+{
+  "name": "markitdown-for-obsidian",
+  "version": "1.0.0",
+  "description": "Moderne Desktop-App zur Konvertierung von Schulunterlagen in Obsidian Markdown per MarkItDown",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build && tsc -p tsconfig.node.json",
+    "dist:win": "npm run build && electron-builder --win --dir",
+    "dist:installer": "npm run build && electron-builder --win nsis",
+    "start": "electron ."
+  },
+  "keywords": [
+    "markitdown",
+    "obsidian",
+    "markdown",
+    "school",
+    "converter",
+    "electron"
+  ],
+  "author": "Antigravity",
+  "license": "MIT",
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "highlight.js": "^11.11.1",
+    "lucide-react": "^1.16.0",
+    "marked": "^15.0.7",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^34.2.0",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.7.3",
+    "vite": "^6.2.0",
+    "vite-plugin-electron": "^0.29.0",
+    "vite-plugin-electron-renderer": "^0.14.6"
+  },
+  "build": {
+    "appId": "com.markitdown.obsidian",
+    "productName": "MarkItDown for Obsidian",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist",
+      "dist-electron",
+      "python_engine"
+    ],
+    "extraResources": [
+      {
+        "from": "python_engine",
+        "to": "python_engine"
+      }
+    ],
+    "win": {
+      "target": ["nsis"],
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "MarkItDown for Obsidian",
+      "uninstallDisplayName": "MarkItDown for Obsidian",
+      "runAfterFinish": true
+    }
+  }
+}
