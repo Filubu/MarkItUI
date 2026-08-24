@@ -2,7 +2,7 @@ import { ipcMain, dialog, shell, app, BrowserWindow } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import { ConverterBridge } from './converterBridge';
-import { AppSettings, ConversionRequest, SaveNoteRequest } from '../shared/types';
+import { AppSettings, ConversionRequest, SaveNoteRequest, FolderTreeNode, VaultRouting } from '../shared/types';
 
 const DEFAULT_SETTINGS: AppSettings = {
   vaultPath: '',
@@ -205,6 +205,74 @@ export function registerIpcHandlers(mainWindow: BrowserWindow) {
       shell.showItemInFolder(filePath);
       return true;
     } catch {
+      return false;
+    }
+  });
+
+  // Vault Folder Tree (hierarchical)
+  ipcMain.handle('get-vault-folder-tree', async (_event, vaultPath: string): Promise<FolderTreeNode[]> => {
+    if (!vaultPath || !fs.existsSync(vaultPath)) {
+      return [];
+    }
+
+    const ignored = new Set(['.obsidian', '.trash', '.git', '.idea', '.vscode', 'node_modules', '$RECYCLE.BIN']);
+
+    function buildTree(dir: string, relPath: string, depth: number): FolderTreeNode[] {
+      if (depth > 5) return [];
+      const nodes: FolderTreeNode[] = [];
+      try {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const entry of entries) {
+          if (entry.isDirectory() && !ignored.has(entry.name) && !entry.name.startsWith('.')) {
+            const entryRel = relPath ? `${relPath}/${entry.name}` : entry.name;
+            const children = buildTree(path.join(dir, entry.name), entryRel, depth + 1);
+            nodes.push({ name: entry.name, path: entryRel, children });
+          }
+        }
+        nodes.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+      } catch (err) {
+        console.error('[Vault Tree] Error:', err);
+      }
+      return nodes;
+    }
+
+    return buildTree(vaultPath, '', 1);
+  });
+
+  // Check if directory is an Obsidian Vault
+  ipcMain.handle('check-is-obsidian-vault', async (_event, vaultPath: string): Promise<boolean> => {
+    if (!vaultPath) return false;
+    try {
+      return fs.existsSync(path.join(vaultPath, '.obsidian'));
+    } catch {
+      return false;
+    }
+  });
+
+  // Read .markitdown-routing.json from vault root
+  ipcMain.handle('get-vault-routing', async (_event, vaultPath: string): Promise<VaultRouting | null> => {
+    if (!vaultPath) return null;
+    const routingPath = path.join(vaultPath, '.markitdown-routing.json');
+    try {
+      if (fs.existsSync(routingPath)) {
+        const data = fs.readFileSync(routingPath, 'utf-8');
+        return JSON.parse(data) as VaultRouting;
+      }
+    } catch (err) {
+      console.error('[Vault Routing] Fehler beim Lesen:', err);
+    }
+    return null;
+  });
+
+  // Save .markitdown-routing.json to vault root (human-readable format)
+  ipcMain.handle('save-vault-routing', async (_event, vaultPath: string, routing: VaultRouting): Promise<boolean> => {
+    if (!vaultPath) return false;
+    const routingPath = path.join(vaultPath, '.markitdown-routing.json');
+    try {
+      fs.writeFileSync(routingPath, JSON.stringify(routing, null, 2), 'utf-8');
+      return true;
+    } catch (err) {
+      console.error('[Vault Routing] Fehler beim Speichern:', err);
       return false;
     }
   });

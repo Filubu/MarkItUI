@@ -309,6 +309,89 @@ export function registerIpcHandlers(mainWindow) {
             return [2 /*return*/];
         });
     }); });
+    // Vault Folder Tree (hierarchical)
+    ipcMain.handle('get-vault-folder-tree', function (_event, vaultPath) { return __awaiter(_this, void 0, void 0, function () {
+        function buildTree(dir, relPath, depth) {
+            if (depth > 5)
+                return [];
+            var nodes = [];
+            try {
+                var entries = fs.readdirSync(dir, { withFileTypes: true });
+                for (var _i = 0, entries_2 = entries; _i < entries_2.length; _i++) {
+                    var entry = entries_2[_i];
+                    if (entry.isDirectory() && !ignored.has(entry.name) && !entry.name.startsWith('.')) {
+                        var entryRel = relPath ? "".concat(relPath, "/").concat(entry.name) : entry.name;
+                        var children = buildTree(path.join(dir, entry.name), entryRel, depth + 1);
+                        nodes.push({ name: entry.name, path: entryRel, children: children });
+                    }
+                }
+                nodes.sort(function (a, b) { return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }); });
+            }
+            catch (err) {
+                console.error('[Vault Tree] Error:', err);
+            }
+            return nodes;
+        }
+        var ignored;
+        return __generator(this, function (_a) {
+            if (!vaultPath || !fs.existsSync(vaultPath)) {
+                return [2 /*return*/, []];
+            }
+            ignored = new Set(['.obsidian', '.trash', '.git', '.idea', '.vscode', 'node_modules', '$RECYCLE.BIN']);
+            return [2 /*return*/, buildTree(vaultPath, '', 1)];
+        });
+    }); });
+    // Check if directory is an Obsidian Vault
+    ipcMain.handle('check-is-obsidian-vault', function (_event, vaultPath) { return __awaiter(_this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            if (!vaultPath)
+                return [2 /*return*/, false];
+            try {
+                return [2 /*return*/, fs.existsSync(path.join(vaultPath, '.obsidian'))];
+            }
+            catch (_b) {
+                return [2 /*return*/, false];
+            }
+            return [2 /*return*/];
+        });
+    }); });
+    // Read .markitdown-routing.json from vault root
+    ipcMain.handle('get-vault-routing', function (_event, vaultPath) { return __awaiter(_this, void 0, void 0, function () {
+        var routingPath, data;
+        return __generator(this, function (_a) {
+            if (!vaultPath)
+                return [2 /*return*/, null];
+            routingPath = path.join(vaultPath, '.markitdown-routing.json');
+            try {
+                if (fs.existsSync(routingPath)) {
+                    data = fs.readFileSync(routingPath, 'utf-8');
+                    return [2 /*return*/, JSON.parse(data)];
+                }
+            }
+            catch (err) {
+                console.error('[Vault Routing] Fehler beim Lesen:', err);
+            }
+            return [2 /*return*/, null];
+        });
+    }); });
+    // Save .markitdown-routing.json to vault root (human-readable format)
+    ipcMain.handle('save-vault-routing', function (_event, vaultPath, routing) { return __awaiter(_this, void 0, void 0, function () {
+        var routingPath;
+        return __generator(this, function (_a) {
+            if (!vaultPath)
+                return [2 /*return*/, false];
+            routingPath = path.join(vaultPath, '.markitdown-routing.json');
+            try {
+                fs.writeFileSync(routingPath, JSON.stringify(routing, null, 2), 'utf-8');
+                return [2 /*return*/, true];
+            }
+            catch (err) {
+                console.error('[Vault Routing] Fehler beim Speichern:', err);
+                return [2 /*return*/, false];
+            }
+            return [2 /*return*/];
+        });
+    }); });
     // Settings
     ipcMain.handle('get-settings', function () { return __awaiter(_this, void 0, void 0, function () {
         return __generator(this, function (_a) {

@@ -1,6 +1,6 @@
 {
   "name": "markitdown-for-obsidian",
-  "version": "1.0.0",
+  "version": "2.3.0",
   "description": "Moderne Desktop-App zur Konvertierung von Schulunterlagen in Obsidian Markdown per MarkItDown",
   "main": "dist-electron/main.js",
   "scripts": {

@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { ConversionRequest, ConversionResult, AppSettings, SaveNoteRequest, SaveNoteResult } from '../shared/types';
+import { ConversionRequest, ConversionResult, AppSettings, SaveNoteRequest, SaveNoteResult, FolderTreeNode, VaultRouting } from '../shared/types';
 
 contextBridge.exposeInMainWorld('electronAPI', {
   convertDocument: (req: ConversionRequest): Promise<ConversionResult> =>
@@ -16,6 +16,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   getVaultSubfolders: (vaultPath: string): Promise<string[]> =>
     ipcRenderer.invoke('get-vault-subfolders', vaultPath),
+
+  getVaultFolderTree: (vaultPath: string): Promise<FolderTreeNode[]> =>
+    ipcRenderer.invoke('get-vault-folder-tree', vaultPath),
+
+  checkIsObsidianVault: (vaultPath: string): Promise<boolean> =>
+    ipcRenderer.invoke('check-is-obsidian-vault', vaultPath),
+
+  getVaultRouting: (vaultPath: string): Promise<VaultRouting | null> =>
+    ipcRenderer.invoke('get-vault-routing', vaultPath),
+
+  saveVaultRouting: (vaultPath: string, routing: VaultRouting): Promise<boolean> =>
+    ipcRenderer.invoke('save-vault-routing', vaultPath, routing),
 
   saveNote: (req: SaveNoteRequest): Promise<SaveNoteResult> =>
     ipcRenderer.invoke('save-note', req),
@@ -35,3 +47,4 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveSettings: (settings: AppSettings): Promise<boolean> =>
     ipcRenderer.invoke('save-settings', settings)
 });
+

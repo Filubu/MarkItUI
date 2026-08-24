@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UploadCloud, Plus } from 'lucide-react';
+import { Upload, Plus } from 'lucide-react';
 
 interface DropZoneProps {
   onFilesAdded: (filePaths: string[]) => void;
@@ -25,10 +25,9 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFilesAdded }) => {
     e.stopPropagation();
     setIsDragActive(false);
 
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      const paths = files
-        // Electron webUtils or file.path gives absolute path
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    if (droppedFiles.length > 0) {
+      const paths = droppedFiles
         .map((f: any) => f.path || f.name)
         .filter(Boolean);
       if (paths.length > 0) {
@@ -49,27 +48,30 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFilesAdded }) => {
   };
 
   return (
-    <div className="dropzone-container">
+    <div className="empty-drop-container">
       <div
-        className={`dropzone ${isDragActive ? 'active' : ''}`}
+        className={`empty-drop-box ${isDragActive ? 'drag-active' : ''}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={handleClick}
       >
-        <div className="dropzone-icon-box">
-          {isDragActive ? <UploadCloud size={24} /> : <Plus size={24} />}
+        <div className="drop-icon-wrap">
+          {isDragActive ? <Upload size={20} /> : <Plus size={20} />}
         </div>
-        <div className="dropzone-title">Dateien hier hineinziehen</div>
-        <div className="dropzone-desc">oder klicken, um Schulaufgaben auszuwählen</div>
+        <div className="drop-headline">Dateien ablegen</div>
+        <div className="drop-subtext">oder klicken zum Auswählen</div>
 
-        <div className="format-tags">
-          <span className="format-pill">.DOCX</span>
-          <span className="format-pill">.PDF</span>
-          <span className="format-pill">.PPTX</span>
-          <span className="format-pill">.XLSX</span>
-          <span className="format-pill">.CSV</span>
-          <span className="format-pill">.TXT</span>
+        <div className="format-tags-list">
+          {['.PDF', '.DOCX', '.PPTX', '.XLSX', '.CSV', '.TXT'].map((tag, idx) => (
+            <span
+              key={tag}
+              className="format-tag"
+              style={{ '--i': idx } as React.CSSProperties}
+            >
+              {tag}
+            </span>
+          ))}
         </div>
       </div>
     </div>

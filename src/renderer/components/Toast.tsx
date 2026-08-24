@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
+import { Check, AlertCircle, Info, X } from 'lucide-react';
 
 export interface ToastMessage {
   id: string;
@@ -18,34 +18,39 @@ export const Toast: React.FC<ToastProps> = ({ toasts, onDismiss }) => {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="toast-container">
-      {toasts.map((toast) => (
-        <div key={toast.id} className={`toast ${toast.type}`}>
-          {toast.type === 'success' && <CheckCircle2 size={18} color="#10b981" />}
-          {toast.type === 'error' && <AlertCircle size={18} color="#ef4444" />}
-          {toast.type === 'info' && <Info size={18} color="#8b5cf6" />}
-          <div style={{ flex: 1 }}>{toast.text}</div>
-          {toast.actionLabel && toast.onAction && (
+    <div className="toast-wrap">
+      {toasts.map((t) => (
+        <div key={t.id} className="toast-pill">
+          {t.type === 'success' ? (
+            <Check size={13} color="#ffffff" />
+          ) : t.type === 'error' ? (
+            <AlertCircle size={13} color="var(--status-error)" />
+          ) : (
+            <Info size={13} color="var(--text-muted)" />
+          )}
+
+          <span style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {t.text}
+          </span>
+
+          {t.actionLabel && t.onAction && (
             <button
-              onClick={toast.onAction}
-              className="btn btn-primary"
-              style={{ padding: '4px 10px', fontSize: '11px' }}
+              className="toast-btn"
+              onClick={() => {
+                t.onAction?.();
+                onDismiss(t.id);
+              }}
             >
-              {toast.actionLabel}
+              {t.actionLabel}
             </button>
           )}
+
           <button
-            onClick={() => onDismiss(toast.id)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--text-dim)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center'
-            }}
+            className="btn-icon-minimal"
+            style={{ padding: '2px', marginLeft: '2px' }}
+            onClick={() => onDismiss(t.id)}
           >
-            <X size={14} />
+            <X size={11} />
           </button>
         </div>
       ))}

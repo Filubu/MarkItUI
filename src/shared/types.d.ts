@@ -44,12 +44,34 @@ export interface SaveNoteResult {
     savedPath?: string;
     error?: string;
 }
+/** Represents a node in the vault folder tree */
+export interface FolderTreeNode {
+    name: string;
+    path: string;
+    children: FolderTreeNode[];
+}
+/** A single routing rule: label → target folder, with optional sub-routes */
+export interface VaultRoute {
+    label: string;
+    targetFolder: string;
+    subRoutes?: VaultRoute[];
+}
+/** Vault routing config stored as .markitdown-routing.json in vault root */
+export interface VaultRouting {
+    vaultName: string;
+    description: string;
+    routes: VaultRoute[];
+}
 export interface ElectronAPI {
     convertDocument: (req: ConversionRequest) => Promise<ConversionResult>;
     selectFiles: () => Promise<string[]>;
     selectDirectory: (title?: string) => Promise<string | null>;
     saveFileDialog: (defaultFileName: string, defaultPath?: string) => Promise<string | null>;
     getVaultSubfolders: (vaultPath: string) => Promise<string[]>;
+    getVaultFolderTree: (vaultPath: string) => Promise<FolderTreeNode[]>;
+    checkIsObsidianVault: (vaultPath: string) => Promise<boolean>;
+    getVaultRouting: (vaultPath: string) => Promise<VaultRouting | null>;
+    saveVaultRouting: (vaultPath: string, routing: VaultRouting) => Promise<boolean>;
     saveNote: (req: SaveNoteRequest) => Promise<SaveNoteResult>;
     saveCustomNote: (filePath: string, content: string) => Promise<SaveNoteResult>;
     openInObsidian: (vaultPath: string, filePath: string) => Promise<boolean>;

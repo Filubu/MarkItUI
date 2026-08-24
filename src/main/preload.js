@@ -15,6 +15,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getVaultSubfolders: function (vaultPath) {
         return ipcRenderer.invoke('get-vault-subfolders', vaultPath);
     },
+    getVaultFolderTree: function (vaultPath) {
+        return ipcRenderer.invoke('get-vault-folder-tree', vaultPath);
+    },
+    checkIsObsidianVault: function (vaultPath) {
+        return ipcRenderer.invoke('check-is-obsidian-vault', vaultPath);
+    },
+    getVaultRouting: function (vaultPath) {
+        return ipcRenderer.invoke('get-vault-routing', vaultPath);
+    },
+    saveVaultRouting: function (vaultPath, routing) {
+        return ipcRenderer.invoke('save-vault-routing', vaultPath, routing);
+    },
     saveNote: function (req) {
         return ipcRenderer.invoke('save-note', req);
     },

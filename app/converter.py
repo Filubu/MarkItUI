@@ -52,9 +52,37 @@ class DocumentConverter:
             # MarkItDown Konvertierung
             result = self.md_engine.convert(str(path))
             raw_text = result.text_content if hasattr(result, "text_content") else str(result)
-            
-            # Text bereinigen
             cleaned_text = raw_text.strip()
+
+            # Format clean title
+            import re
+            clean_stem = path.stem.replace("_", " ").replace("-", " ")
+            clean_stem = re.sub(r'\s+', ' ', clean_stem).strip() or path.stem
+            doc_title = custom_title.strip() if custom_title and custom_title.strip() else clean_stem
+
+            # Clean MarkItDown artifacts in text
+            lines = cleaned_text.splitlines()
+            clean_lines = []
+            found_first_heading = False
+
+            for line in lines:
+                stripped = line.strip()
+                if not found_first_heading and stripped:
+                    match = re.match(r'^(#{1,3}\s*)?[Tt]itle:\s*(.+)$', stripped)
+                    if match:
+                        extracted_title = match.group(2).strip()
+                        clean_lines.append(f"# {extracted_title}")
+                        found_first_heading = True
+                        continue
+                    elif stripped.startswith("#"):
+                        found_first_heading = True
+                clean_lines.append(line)
+
+            cleaned_text = "\n".join(clean_lines).strip()
+
+            # Ensure document starts with clean top-level heading
+            if not cleaned_text.startswith("#"):
+                cleaned_text = f"# {doc_title}\n\n{cleaned_text}"
 
             # Optional: Frontmatter hinzufügen
             if add_frontmatter:
@@ -62,7 +90,7 @@ class DocumentConverter:
                     source_path=path,
                     tags=tags,
                     subject=subject,
-                    title=custom_title
+                    title=doc_title
                 )
                 final_text = f"{frontmatter}\n\n{cleaned_text}\n"
             else:
@@ -84,15 +112,17 @@ class DocumentConverter:
         title: Optional[str] = None
     ) -> str:
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        date_only = datetime.datetime.now().strftime("%Y-%m-%d")
         doc_title = title or source_path.stem
 
         tag_list = list(tags) if tags else ["schule", "itslearning"]
-        if subject and subject.strip() and subject.strip() not in tag_list:
+        if subject and subject.strip() and subject.strip().lower() not in [t.lower() for t in tag_list]:
             tag_list.append(subject.strip().lower())
 
         yaml_lines = [
             "---",
             f"title: \"{doc_title}\"",
+            f"date: {date_only}",
             f"created: {now}",
             f"source_file: \"{source_path.name}\"",
             f"source_type: \"{source_path.suffix.lstrip('.')}\"",

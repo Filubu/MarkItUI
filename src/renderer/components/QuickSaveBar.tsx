@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Save, FolderPlus, ExternalLink, HardDrive, Check } from 'lucide-react';
-import { AppSettings, FileQueueItem } from '../../shared/types';
+import { Check, ArrowUpRight, FolderPlus, Tag } from 'lucide-react';
+import { AppSettings, FileQueueItem, FolderTreeNode, VaultRouting } from '../../shared/types';
+import { FolderTreePicker } from './FolderTreePicker';
 
 interface QuickSaveBarProps {
   currentFile: FileQueueItem | null;
   settings: AppSettings;
   vaultSubfolders: string[];
+  folderTree: FolderTreeNode[];
+  vaultRouting: VaultRouting | null;
   onSaveToVault: (subfolder: string, fileName: string) => Promise<string | null>;
   onSaveCustom: (fileName: string) => Promise<string | null>;
   onOpenInObsidian: (filePath: string) => void;
@@ -16,22 +19,25 @@ export const QuickSaveBar: React.FC<QuickSaveBarProps> = ({
   currentFile,
   settings,
   vaultSubfolders,
+  folderTree,
+  vaultRouting,
   onSaveToVault,
   onSaveCustom,
   onOpenInObsidian,
   onOpenSettings
 }) => {
   const [selectedSubfolder, setSelectedSubfolder] = useState<string>('');
-  const [customFileName, setCustomFileName] = useState<string>('');
+  const [fileName, setFileName] = useState<string>('');
   const [lastSavedPath, setLastSavedPath] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeRouteLabel, setActiveRouteLabel] = useState<string | null>(null);
 
-  // Initialize defaults whenever currentFile or settings change
   useEffect(() => {
     if (currentFile) {
       const stem = currentFile.name.substring(0, currentFile.name.lastIndexOf('.')) || currentFile.name;
-      setCustomFileName(`${stem}.md`);
+      setFileName(`${stem}.md`);
       setLastSavedPath(null);
+      setActiveRouteLabel(null);
     }
   }, [currentFile?.id]);
 
@@ -47,7 +53,7 @@ export const QuickSaveBar: React.FC<QuickSaveBarProps> = ({
     return null;
   }
 
-  const hasVault = !!settings.vaultPath;
+  const hasVault = Boolean(settings.vaultPath);
 
   const handleVaultSave = async () => {
     if (!hasVault) {
@@ -55,7 +61,9 @@ export const QuickSaveBar: React.FC<QuickSaveBarProps> = ({
       return;
     }
     setIsSaving(true);
-    const saved = await onSaveToVault(selectedSubfolder, customFileName);
+    // Convert empty/root to proper format for save handler
+    const subfolder = selectedSubfolder || '/ (Hauptverzeichnis)';
+    const saved = await onSaveToVault(subfolder, fileName);
     setIsSaving(false);
     if (saved) {
       setLastSavedPath(saved);
@@ -67,85 +75,115 @@ export const QuickSaveBar: React.FC<QuickSaveBarProps> = ({
 
   const handleCustomSave = async () => {
     setIsSaving(true);
-    const saved = await onSaveCustom(customFileName);
+    const saved = await onSaveCustom(fileName);
     setIsSaving(false);
     if (saved) {
       setLastSavedPath(saved);
     }
   };
 
+  const handleRouteClick = (label: string, targetFolder: string) => {
+    setSelectedSubfolder(targetFolder);
+    setActiveRouteLabel(label);
+  };
+
+  // Flatten routes including sub-routes for display
+  const routeChips: Array<{ label: string; targetFolder: string; isSubRoute: boolean }> = [];
+  if (vaultRouting?.routes) {
+    for (const route of vaultRouting.routes) {
+      routeChips.push({ label: route.label, targetFolder: route.targetFolder, isSubRoute: false });
+      if (route.subRoutes) {
+        for (const sub of route.subRoutes) {
+          const fullPath = route.targetFolder
+            ? `${route.targetFolder}/${sub.targetFolder}`
+            : sub.targetFolder;
+          routeChips.push({ label: `${route.label} › ${sub.label}`, targetFolder: fullPath, isSubRoute: true });
+        }
+      }
+    }
+  }
+
   return (
-    <div className="save-bar">
-      <div className="save-controls-left">
-        <div className="input-group" style={{ flex: 1, maxWidth: '280px' }}>
-          <label className="input-label">Dateiname</label>
-          <input
-            type="text"
-            className="app-input"
-            value={customFileName}
-            onChange={(e) => setCustomFileName(e.target.value)}
-            placeholder="Aufgabe.md"
-          />
-        </div>
-
-        {hasVault ? (
-          <div className="input-group">
-            <label className="input-label">Obsidian Fach / Ordner</label>
-            <select
-              className="app-select"
-              value={selectedSubfolder}
-              onChange={(e) => setSelectedSubfolder(e.target.value)}
-            >
-              {vaultSubfolders.map((folder) => (
-                <option key={folder} value={folder}>
-                  📁 {folder}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : (
-          <div className="input-group">
-            <label className="input-label">Obsidian Vault</label>
+    <div className="save-bar-container">
+      {/* Route Quick-Access Chips */}
+      {routeChips.length > 0 && (
+        <div className="route-chips-bar">
+          {routeChips.map((chip, idx) => (
             <button
-              className="btn btn-outline"
-              onClick={onOpenSettings}
-              style={{ fontSize: '12px', padding: '7px 12px' }}
+              key={idx}
+              className={`route-chip ${activeRouteLabel === chip.label ? 'active' : ''} ${chip.isSubRoute ? 'sub' : ''}`}
+              style={{ '--i': idx } as React.CSSProperties}
+              onClick={() => handleRouteClick(chip.label, chip.targetFolder)}
+              title={`Ziel: ${chip.targetFolder || 'Hauptverzeichnis'}`}
             >
-              <FolderPlus size={14} /> Vault-Pfad hinterlegen
+              <Tag size={10} />
+              {chip.label}
             </button>
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        {lastSavedPath && (
+      {/* Main Save Dock */}
+      <div className="floating-save-dock">
+        {/* File Name Input */}
+        <input
+          type="text"
+          className="ghost-input"
+          value={fileName}
+          onChange={(e) => setFileName(e.target.value)}
+          placeholder="dateiname.md"
+          title="Dateiname"
+        />
+
+        {/* Folder Tree Picker */}
+        {hasVault ? (
+          <FolderTreePicker
+            tree={folderTree}
+            selectedPath={selectedSubfolder}
+            onSelect={(path) => {
+              setSelectedSubfolder(path);
+              setActiveRouteLabel(null);
+            }}
+          />
+        ) : (
           <button
-            className="btn btn-secondary"
-            onClick={() => onOpenInObsidian(lastSavedPath)}
-            title="In Obsidian öffnen"
-            style={{ color: '#c4b5fd', borderColor: 'rgba(124, 58, 237, 0.4)' }}
+            className="btn-glass"
+            onClick={onOpenSettings}
           >
-            <ExternalLink size={14} /> In Obsidian öffnen
+            <FolderPlus size={13} /> Vault wählen
           </button>
         )}
 
+        {/* Custom Save */}
         <button
-          className="btn btn-secondary"
+          className="btn-glass"
           onClick={handleCustomSave}
           disabled={isSaving}
-          title="An einem beliebigen Ort speichern"
+          title="An beliebigem Ort speichern"
         >
-          <HardDrive size={14} /> Speichern unter...
+          Speichern unter...
         </button>
 
+        {/* Open in Obsidian Link if saved */}
+        {lastSavedPath && (
+          <button
+            className="btn-glass"
+            onClick={() => onOpenInObsidian(lastSavedPath)}
+            title="In Obsidian öffnen"
+          >
+            Obsidian <ArrowUpRight size={12} />
+          </button>
+        )}
+
+        {/* Primary Save to Vault Button */}
         <button
-          className="btn btn-primary"
+          className="btn-solid-white"
           onClick={handleVaultSave}
           disabled={isSaving}
-          title={hasVault ? `Im Vault ablegen (${selectedSubfolder})` : 'Zuerst Vault-Pfad konfigurieren'}
+          title={hasVault ? `In Obsidian Vault ablegen (${selectedSubfolder || 'Hauptverzeichnis'})` : 'Zuerst Vault wählen'}
         >
-          {lastSavedPath ? <Check size={16} /> : <Save size={16} />}
-          {hasVault ? 'In Obsidian speichern' : 'Vault wählen & speichern'}
+          {lastSavedPath ? <Check size={14} /> : null}
+          {hasVault ? 'In Vault speichern' : 'Vault wählen & speichern'}
         </button>
       </div>
     </div>

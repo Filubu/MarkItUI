@@ -10,6 +10,15 @@ if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
 
+def format_title_from_stem(stem: str) -> str:
+    import re
+    # Replace underscores and hyphens with spaces
+    clean = stem.replace("_", " ").replace("-", " ")
+    # Clean multiple spaces
+    clean = re.sub(r'\s+', ' ', clean).strip()
+    return clean or stem
+
+
 def convert_document(file_path: str, add_frontmatter: bool = True, tags: list = None, subject: str = "", title: str = "") -> dict:
     path = Path(file_path)
     if not path.exists():
@@ -27,16 +36,45 @@ def convert_document(file_path: str, add_frontmatter: bool = True, tags: list = 
         raw_text = result.text_content if hasattr(result, "text_content") else str(result)
         cleaned_text = raw_text.strip()
 
+        # Format clean human-readable title
+        doc_title = title.strip() if title and title.strip() else format_title_from_stem(path.stem)
+
+        # Clean MarkItDown artifacts in text (e.g. Title: ..., # Title: ...)
+        import re
+        lines = cleaned_text.splitlines()
+        clean_lines = []
+        found_first_heading = False
+
+        for line in lines:
+            stripped = line.strip()
+            if not found_first_heading and stripped:
+                match = re.match(r'^(#{1,3}\s*)?[Tt]itle:\s*(.+)$', stripped)
+                if match:
+                    extracted_title = match.group(2).strip()
+                    clean_lines.append(f"# {extracted_title}")
+                    found_first_heading = True
+                    continue
+                elif stripped.startswith("#"):
+                    found_first_heading = True
+            clean_lines.append(line)
+
+        cleaned_text = "\n".join(clean_lines).strip()
+
+        # Ensure document starts with a clean top-level heading if none exists
+        if not cleaned_text.startswith("#"):
+            cleaned_text = f"# {doc_title}\n\n{cleaned_text}"
+
         if add_frontmatter:
             now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-            doc_title = title or path.stem
+            date_only = datetime.datetime.now().strftime("%Y-%m-%d")
             tag_list = list(tags) if tags else ["schule", "itslearning"]
-            if subject and subject.strip() and subject.strip() not in tag_list:
+            if subject and subject.strip() and subject.strip().lower() not in [t.lower() for t in tag_list]:
                 tag_list.append(subject.strip().lower())
 
             yaml_lines = [
                 "---",
                 f"title: \"{doc_title}\"",
+                f"date: {date_only}",
                 f"created: {now}",
                 f"source_file: \"{path.name}\"",
                 f"source_type: \"{path.suffix.lstrip('.')}\"",
