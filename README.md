@@ -8,7 +8,7 @@ Eine moderne, elegante Desktop-App (mit **Obsidian Dark Glassmorphism Theme**), 
 
 Lade einfach die Installationsdatei herunter und starte das Setup:
 
-👉 **[MarkItUI Setup 2.5.1.exe](file:///c:/Users/filka/Documents/Code/markitdown_tool/release/MarkItUI%20Setup%202.5.1.exe)**
+👉 **[MarkItUI Setup 2.5.2.exe](file:///c:/Users/filka/Documents/Code/markitdown_tool/release/MarkItUI%20Setup%202.5.2.exe)**
 
 ### Was der Installer macht:
 - 🖥️ **Windows Setup Assistent** mit freier Zielordner-Auswahl (z. B. auf deiner SSD oder Festplatte).

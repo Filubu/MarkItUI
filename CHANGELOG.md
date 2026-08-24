@@ -5,6 +5,14 @@ Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/) 
 
 ---
 
+## [2.5.2] - 2026-08-24
+
+### Changed
+- **Sanfter Text-Auslauf oben & unten (Fade-Mask)**: Der Text im Dokumenten-Viewport und Editor wird beim Scrollen nicht mehr hart abgeschnitten, sondern blendet über dynamische CSS-Gradientenmasken (`mask-image: linear-gradient`) am oberen Rand und über der schwebenden Save-Bar harmonisch und weich ins Dunkle aus.
+- **Optimierte Scroll-Abstände**: Ausreichender unterer Freiraum (`140px`), damit auch die letzten Zeilen eines Dokuments komfortabel über die Save-Bar gescrollt werden können.
+
+---
+
 ## [2.5.1] - 2026-08-24
 
 ### Changed
