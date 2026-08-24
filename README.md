@@ -93,10 +93,14 @@ Die kompilierte Installationsdatei wird im Verzeichnis `release/` abgelegt.
 
 ---
 
+## Danksagung & Attribution
+
+- **Core-Engine:** Die eigentliche Dokumentenkonvertierung basiert auf der quelloffenen Python-Bibliothek **[Microsoft MarkItDown](https://github.com/microsoft/markitdown)** (MIT-Lizenz). MarkItUI fungiert als spezialisiertes Desktop-Frontend, Shell- und Obsidian-Integrationsschicht um Microsofts Engine herum.
+- **Projektcharakter:** Dieses Projekt ist *vibecoded* – iterativ und fokussiert entwickelt im KI-gestützten Pair-Programming für maximale Alltagsproduktivität.
+- **Frontend & Desktop-App:** Entwickelt von [Filubu](https://github.com/Filubu).
+
+---
+
 ## Lizenz
 
-Dieses Projekt steht unter der [MIT-Lizenz](LICENSE).
-
-
-
-
+Dieses Projekt ist unter der [MIT-Lizenz](LICENSE) lizenziert.
