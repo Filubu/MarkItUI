@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Setup Python
@@ -35,7 +35,14 @@ jobs:
       - name: Install Node Dependencies
         run: npm ci
 
-      - name: Build & Publish Release
+      - name: Build Windows Installer
+        run: npm run dist:installer
+
+      - name: Upload Installer to GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: release/*.exe
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run dist:installer
