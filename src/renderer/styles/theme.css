@@ -219,49 +219,19 @@ body {
 }
 
 /* ============================================================
-   TOPBAR & BRANDING
+   TOPBAR
    ============================================================ */
 .app-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 48px;
-  padding: 0 12px;
-  background: var(--glass-l1);
-  backdrop-filter: var(--glass-blur-l1);
-  border-bottom: 1px solid var(--border-subtle);
+  height: 46px;
+  padding: 0 16px;
+  background: transparent;
+  border-bottom: 1px solid transparent;
   z-index: 30;
   gap: 12px;
-  transition: background var(--dur-normal) ease;
-}
-
-.topbar-brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 6px 4px 4px;
-  margin-right: 4px;
-  flex-shrink: 0;
-  user-select: none;
-}
-
-.topbar-brand-logo {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-  object-fit: contain;
-  transition: transform var(--dur-fast) var(--ease-spring-snappy);
-}
-
-.topbar-brand:hover .topbar-brand-logo {
-  transform: scale(1.1);
-}
-
-.topbar-brand-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-main);
-  letter-spacing: -0.01em;
+  transition: border-color var(--dur-normal) ease;
 }
 
 .topbar-left-tabs {

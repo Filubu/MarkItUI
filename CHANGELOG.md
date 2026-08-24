@@ -5,6 +5,13 @@ Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/) 
 
 ---
 
+## [2.5.1] - 2026-08-24
+
+### Changed
+- **Entfernung redundanter App-Header & Randleiste**: Das doppelte Logo und der Titel im Software-Header wurden entfernt, da diese bereits in der nativen Windows-Titelleiste vorhanden sind. Der obere Balken ist nun vollständig transparent und nahtlos integriert.
+
+---
+
 ## [2.5.0] - 2026-08-24
 
 ### Added

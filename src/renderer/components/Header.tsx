@@ -29,13 +29,8 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   return (
     <header className="app-topbar">
-      {/* Left: Brand & File Tabs */}
+      {/* Left: File Tabs */}
       <div className="topbar-left-tabs">
-        <div className="topbar-brand" title="MarkItUI">
-          <img src="app_logo.png" alt="MarkItUI" className="topbar-brand-logo" />
-          {files.length === 0 && <span className="topbar-brand-title">MarkItUI</span>}
-        </div>
-
         {files.map((f, index) => {
           const isActive = f.id === selectedId;
           const statusClass = f.status === 'converting' ? 'converting' : f.status === 'success' ? 'success' : f.status === 'error' ? 'error' : '';
