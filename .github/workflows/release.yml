@@ -36,6 +36,9 @@ jobs:
         run: npm ci
 
       - name: Build Windows Installer
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run dist:installer
 
       - name: Upload Installer to GitHub Release
