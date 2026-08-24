@@ -5,6 +5,15 @@ Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/) 
 
 ---
 
+## [2.5.3] - 2026-08-24
+
+### Changed
+- **Unbeschränkte Vault-Pfadlänge & verbesserte Anpassbarkeit**: Das Vault-Eingabefeld in den Einstellungen wurde verbreitert (`560px` Dialog), formatiert überlange Pfade sauber, entfernt automatisch Anführungszeichen beim Einfügen und besitzt einen eindeutigen „Ordner wählen“-Button zur freien Verzeichnisauswahl.
+- **Echtzeit-Vault-Erkennung**: Prüft den eingegebenen Pfad live im Hintergrund auf `.obsidian` und gibt sofort optisches Feedback.
+- **Vault-Wechsel direkt aus der Save-Bar**: Im Zielordner-Dropdown (`FolderTreePicker`) wird nun der aktive Vault angezeigt und ein neuer Schnellzugriff *„Vault-Pfad anpassen...“* ermöglicht das direkte Wechseln des Vaults.
+
+---
+
 ## [2.5.2] - 2026-08-24
 
 ### Changed

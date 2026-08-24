@@ -144,10 +144,12 @@ export const QuickSaveBar: React.FC<QuickSaveBarProps> = ({
           <FolderTreePicker
             tree={folderTree}
             selectedPath={selectedSubfolder}
+            vaultPath={settings.vaultPath}
             onSelect={(path) => {
               setSelectedSubfolder(path);
               setActiveRouteLabel(null);
             }}
+            onChangeVault={onOpenSettings}
           />
         ) : (
           <button

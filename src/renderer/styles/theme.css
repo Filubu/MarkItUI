@@ -1068,7 +1068,7 @@ body {
   font-size: 13px;
   cursor: pointer;
   white-space: nowrap;
-  max-width: 200px;
+  max-width: 260px;
   transform: translateZ(0);
   transition: transform var(--dur-fast) var(--ease-spring-snappy),
               border-color var(--dur-fast) ease,
@@ -1090,7 +1090,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 130px;
+  max-width: 190px;
 }
 
 .folder-tree-chevron {
@@ -1107,8 +1107,8 @@ body {
   position: absolute;
   bottom: calc(100% + 8px);
   left: 0;
-  width: 300px;
-  max-height: 360px;
+  width: 320px;
+  max-height: 380px;
   background: #141616;
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-lg);
@@ -1122,19 +1122,67 @@ body {
 
 .folder-tree-header {
   padding: 10px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.folder-tree-header-title {
   font-size: 11px;
   font-weight: 500;
   color: var(--text-dim);
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  border-bottom: 1px solid var(--border-subtle);
-  flex-shrink: 0;
+}
+
+.folder-tree-header-vault {
+  font-size: 12px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folder-tree-header-vault span {
+  color: #ffffff;
+  font-weight: 500;
 }
 
 .folder-tree-scroll {
   overflow-y: auto;
   padding: 6px 0;
   flex: 1;
+}
+
+.folder-tree-footer {
+  padding: 8px 12px;
+  border-top: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.02);
+  flex-shrink: 0;
+}
+
+.folder-tree-change-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--dur-fast) ease;
+}
+
+.folder-tree-change-btn:hover {
+  color: #ffffff;
+  border-color: var(--border-hover);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .tree-node {
@@ -1333,8 +1381,12 @@ body {
   transform: translateZ(0);
 }
 
+.modal-dialog.settings-modal {
+  width: 560px;
+}
+
 .modal-dialog.routing-modal {
-  width: 600px;
+  width: 620px;
 }
 
 .modal-head {
@@ -1379,6 +1431,30 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.vault-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.vault-path-input {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+.browse-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  flex-shrink: 0;
+  font-size: 12.5px;
+  font-weight: 500;
 }
 
 .form-label {
@@ -1436,6 +1512,16 @@ body {
   margin-top: 4px;
   width: fit-content;
   animation: fluidScaleIn var(--dur-fast) var(--ease-spring-soft);
+}
+
+.vault-detected-badge.success {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.vault-detected-badge.info {
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 /* Routing Settings Row */

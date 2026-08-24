@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Folder, FolderTree } from 'lucide-react';
+import { X, FolderOpen, FolderTree, CheckCircle2, AlertCircle } from 'lucide-react';
 import { AppSettings } from '../../shared/types';
 
 interface SettingsModalProps {
@@ -23,18 +23,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
   const [form, setForm] = useState<AppSettings>({ ...settings });
   const [tagsInput, setTagsInput] = useState<string>(settings.defaultTags.join(', '));
+  const [dynamicIsVault, setDynamicIsVault] = useState<boolean>(isObsidianVault);
 
   // Sync form when settings change externally
   useEffect(() => {
     setForm({ ...settings });
     setTagsInput(settings.defaultTags.join(', '));
-  }, [settings]);
+    setDynamicIsVault(isObsidianVault);
+  }, [settings, isObsidianVault]);
+
+  // Live detection of Obsidian vault on path edit
+  useEffect(() => {
+    if (window.electronAPI && form.vaultPath && form.vaultPath.trim()) {
+      const cleanPath = form.vaultPath.replace(/^["']|["']$/g, '').trim();
+      window.electronAPI.checkIsObsidianVault(cleanPath).then(setDynamicIsVault).catch(() => setDynamicIsVault(false));
+    } else {
+      setDynamicIsVault(false);
+    }
+  }, [form.vaultPath]);
 
   if (!isOpen) return null;
 
   const handleBrowseVault = async () => {
     try {
-      const selected = await window.electronAPI.selectDirectory('Obsidian Vault Ordner auswählen (z.B. auf SSD)');
+      const selected = await window.electronAPI.selectDirectory('Obsidian Vault Ordner auswählen (z.B. auf SSD oder Festplatte)');
       if (selected) {
         setForm((prev) => ({ ...prev, vaultPath: selected }));
       }
@@ -43,14 +55,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     }
   };
 
+  const handlePathChange = (val: string) => {
+    const cleaned = val.replace(/^["']|["']$/g, '').trimStart();
+    setForm({ ...form, vaultPath: cleaned });
+  };
+
   const handleSave = () => {
     const parsedTags = tagsInput
       .split(',')
       .map((t) => t.trim().replace(/^#/, ''))
       .filter(Boolean);
 
+    const cleanVaultPath = form.vaultPath.replace(/^["']|["']$/g, '').trim();
+
     const updated: AppSettings = {
       ...form,
+      vaultPath: cleanVaultPath,
       defaultTags: parsedTags.length > 0 ? parsedTags : ['schule']
     };
 
@@ -60,7 +80,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-dialog settings-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
           <div className="modal-title">Einstellungen</div>
           <button className="btn-icon-minimal" onClick={onClose}>
@@ -71,23 +91,38 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         <div className="modal-content">
           {/* Vault Path */}
           <div className="form-group">
-            <label className="form-label">Obsidian Vault Pfad (z. B. auf SSD)</label>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <label className="form-label">Obsidian Vault Pfad (Speicherort)</label>
+            <div className="vault-input-group">
               <input
                 type="text"
-                className="form-input"
-                style={{ flex: 1 }}
+                className="form-input vault-path-input"
                 value={form.vaultPath}
-                onChange={(e) => setForm({ ...form, vaultPath: e.target.value })}
-                placeholder="D:\MeinVault"
+                onChange={(e) => handlePathChange(e.target.value)}
+                placeholder="z. B. D:\MeinVault oder C:\Users\...\Obsidian"
+                title={form.vaultPath}
+                spellCheck={false}
               />
-              <button className="btn-glass" onClick={handleBrowseVault}>
-                <Folder size={13} />
+              <button
+                type="button"
+                className="btn-glass browse-btn"
+                onClick={handleBrowseVault}
+                title="Ordner über Windows Explorer auswählen"
+              >
+                <FolderOpen size={13} />
+                <span>Ordner wählen</span>
               </button>
             </div>
-            {isObsidianVault && (
-              <div className="vault-detected-badge">
-                Obsidian Vault erkannt
+
+            {form.vaultPath && dynamicIsVault && (
+              <div className="vault-detected-badge success">
+                <CheckCircle2 size={12} />
+                <span>Gültiger Obsidian Vault (.obsidian Ordner gefunden)</span>
+              </div>
+            )}
+
+            {form.vaultPath && !dynamicIsVault && (
+              <div className="vault-detected-badge info">
+                <span>Standard-Ordner (wird als Notiz-Ablageort genutzt)</span>
               </div>
             )}
           </div>
