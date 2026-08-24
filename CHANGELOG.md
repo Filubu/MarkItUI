@@ -5,41 +5,22 @@ Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/) 
 
 ---
 
-## [2.5.3] - 2026-08-24
-
-### Changed
-- **Unbeschränkte Vault-Pfadlänge & verbesserte Anpassbarkeit**: Das Vault-Eingabefeld in den Einstellungen wurde verbreitert (`560px` Dialog), formatiert überlange Pfade sauber, entfernt automatisch Anführungszeichen beim Einfügen und besitzt einen eindeutigen „Ordner wählen“-Button zur freien Verzeichnisauswahl.
-- **Echtzeit-Vault-Erkennung**: Prüft den eingegebenen Pfad live im Hintergrund auf `.obsidian` und gibt sofort optisches Feedback.
-- **Vault-Wechsel direkt aus der Save-Bar**: Im Zielordner-Dropdown (`FolderTreePicker`) wird nun der aktive Vault angezeigt und ein neuer Schnellzugriff *„Vault-Pfad anpassen...“* ermöglicht das direkte Wechseln des Vaults.
-
----
-
-## [2.5.2] - 2026-08-24
-
-### Changed
-- **Sanfter Text-Auslauf oben & unten (Fade-Mask)**: Der Text im Dokumenten-Viewport und Editor wird beim Scrollen nicht mehr hart abgeschnitten, sondern blendet über dynamische CSS-Gradientenmasken (`mask-image: linear-gradient`) am oberen Rand und über der schwebenden Save-Bar harmonisch und weich ins Dunkle aus.
-- **Optimierte Scroll-Abstände**: Ausreichender unterer Freiraum (`140px`), damit auch die letzten Zeilen eines Dokuments komfortabel über die Save-Bar gescrollt werden können.
-
----
-
-## [2.5.1] - 2026-08-24
-
-### Changed
-- **Entfernung redundanter App-Header & Randleiste**: Das doppelte Logo und der Titel im Software-Header wurden entfernt, da diese bereits in der nativen Windows-Titelleiste vorhanden sind. Der obere Balken ist nun vollständig transparent und nahtlos integriert.
-
----
-
-## [2.5.0] - 2026-08-24
+## [2.6.0] - 2026-08-24
 
 ### Added
-- **Windows Explorer Kontextmenü für Dateien**: Rechtsklick auf beliebige Dokumentdateien (.pdf, .docx, .pptx, .xlsx, .csv etc.) &rarr; *„Mit MarkItUI konvertieren“* öffnet/fokussiert MarkItUI und konvertiert die Datei sofort.
-- **Windows Explorer Kontextmenü für Ordner**: Rechtsklick auf Ordner im Explorer &rarr; *„Ordner mit MarkItUI umwandeln“* scannt den gesamten Ordner rekursiv nach unterstützten Dokumenten und lädt sie in die Queue.
-- **Ordner-Unzip & Batch-Export**: Neuer 1-Klick-Export-Button („Alle exportieren / Entpacken“) für Queues und Ordner, um alle konvertierten Dokumente mit relativer Ordnerstruktur als Markdown in einen Zielordner oder Vault zu speichern.
-- **Single-Instance Lock**: Bei erneuten Rechtsklick-Aktionen im Explorer wird die bestehende Instanz in den Vordergrund geholt und die Dateien sofort geladen.
+- **Windows Explorer Kontextmenü für Dateien**: Rechtsklick auf beliebige Dokumente (`.pdf`, `.docx`, `.pptx`, `.xlsx`, `.csv` etc.) &rarr; *„Mit MarkItUI konvertieren“* öffnet oder fokussiert MarkItUI und startet sofort die Umwandlung.
+- **Windows Explorer Kontextmenü für Ordner**: Rechtsklick auf Ordner &rarr; *„Ordner mit MarkItUI umwandeln“* scannt den gesamten Ordner rekursiv nach Dokumenten.
+- **Ordner-Unzip & Batch-Export**: Neuer 1-Klick-Export-Button („Alle exportieren / Entpacken“) für Datei-Queues und Ordner, um alle konvertierten Markdown-Notizen inklusive Unterordnerstruktur in ein Zielverzeichnis zu exportieren.
+- **Single-Instance Lock**: Bei wiederholtem Öffnen via Explorer wird die bestehende Instanz in den Vordergrund geholt.
+- **Schnellwechsel für Vaults in der Save-Bar**: Im Zielordner-Dropdown (`FolderTreePicker`) wird der aktive Vault angezeigt und ein neuer Schnellzugriff *„Vault-Pfad anpassen...“* ermöglicht den sofortigen Vault-Wechsel.
+- **Echtzeit-Vault-Erkennung**: Prüft den eingegebenen Pfad live auf `.obsidian` und gibt sofort optisches Feedback.
 
 ### Changed
-- **Verbreiterte Save-Bar**: Das Eingabefeld für Dateinamen wurde dynamisch auf `280px–500px` vergrößert, sodass lange Titel nicht mehr abgeschnitten werden und sich bequem bearbeiten lassen.
-- **Windows Taskleisten- & Startmenü-Icon Repariert**: Entfernen von `signAndEditExecutable: false`, sodass `resedit` das hochauflösende `build/icon.ico` direkt in die PE-Header der `MarkItUI.exe` injiziert.
+- **Sanfter Text-Auslauf (Fade-Mask)**: Der Text im Dokumenten-Viewport und Editor blendet am oberen Rand sowie über der schwebenden Save-Bar harmonisch und weich über CSS-Gradientenmasken (`mask-image: linear-gradient`) ins Dunkle aus.
+- **Verbreiterte & ergonomische Save-Bar**: Das Dateinamen-Eingabefeld wurde auf `280px–500px` vergrößert, damit lange Titel nicht abgeschnitten werden.
+- **Nahtloser & transparenter Header**: Redundantes Software-Logo und Titel im Header wurden entfernt; die Menüleiste ist nun vollständig transparent und nahtlos integriert.
+- **Unbeschränkte Vault-Pfadlänge**: Das Vault-Eingabefeld in den Einstellungen wurde auf 560px verbreitert, unterstützt beliebig lange Pfade und bereinigt Anführungszeichen beim Einfügen automatisch.
+- **Windows Startmenü- & Taskleisten-Icon**: Native Einbettung des hochauflösenden `build/icon.ico` in die Windows PE-Ressourcen der `MarkItUI.exe`.
 
 ---
 

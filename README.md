@@ -1,38 +1,47 @@
-# 🚀 MarkItUI
+# 🚀 MarkItUI (v2.6.0)
 
-Eine moderne, elegante Desktop-App (mit **Obsidian Dark Glassmorphism Theme**), die Schulunterlagen (.docx, .pdf, .pptx, .xlsx etc.) automatisch per **MarkItUI** in saubere Markdown-Notizen umwandelt, eine Live-Vorschau bietet und sie mit einem Klick direkt in deinem **Obsidian-Vault** (z. B. auf deiner portablen SSD) ablegt.
+Eine moderne, elegante Desktop-App (im **Obsidian Ethereal Glassmorphism Design**), die Schulunterlagen (.docx, .pdf, .pptx, .xlsx, .csv etc.) per **MarkItUI** in saubere Markdown-Notizen umwandelt, eine interaktive Live-Vorschau bietet und sie mit einem Klick direkt in deinem **Obsidian-Vault** ablegt.
 
 ---
 
-## 💾 Installation
+## 💾 Installation & Download
 
-Lade einfach die Installationsdatei herunter und starte das Setup:
+Lade einfach die aktuelle Windows-Setup-Datei herunter und starte das Setup:
 
-👉 **[MarkItUI Setup 2.5.3.exe](file:///c:/Users/filka/Documents/Code/markitdown_tool/release/MarkItUI%20Setup%202.5.3.exe)**
+👉 **[MarkItUI Setup 2.6.0.exe](file:///c:/Users/filka/Documents/Code/markitdown_tool/release/MarkItUI%20Setup%202.6.0.exe)**
 
 ### Was der Installer macht:
 - 🖥️ **Windows Setup Assistent** mit freier Zielordner-Auswahl (z. B. auf deiner SSD oder Festplatte).
-- 📌 **Desktop-Verknüpfung** und **Startmenü-Eintrag** werden automatisch angelegt.
-- ⚡ **Windows Explorer Kontextmenü**: Rechtsklick auf Dateien (*„Mit MarkItUI konvertieren“*) und Ordner (*„Ordner mit MarkItUI umwandeln“*).
+- 📌 **Desktop-Verknüpfung** und **Startmenü-Eintrag** mit hochauflösendem App-Logo werden automatisch angelegt.
+- ⚡ **Windows Explorer Kontextmenü**: 
+  - Rechtsklick auf eine Datei &rarr; *„Mit MarkItUI konvertieren“*
+  - Rechtsklick auf einen Ordner &rarr; *„Ordner mit MarkItUI umwandeln“*
 - 🔄 **Saubere Deinstallation** über die Windows-Systemsteuerung / Apps & Features unterstützt.
 
 ---
 
-## ✨ Features
+## ✨ Features im Überblick
 
-- 🖱️ **Windows Explorer Rechtsklick & Drag & Drop**: Dateien oder ganze Ordner direkt aus dem Explorer mit MarkItUI öffnen und konvertieren.
-- 📦 **Ordner-Unzip & Batch-Export**: Wandelt ganze Ordnerstrukturen um und exportiert alle Dokumente in einem Schritt als saubere Markdown-Notizen.
-- ⚡ **1-Klick-Konvertierung**: Wandelt `.docx`, `.pdf`, `.pptx`, `.xlsx`, `.csv`, `.txt`, `.html` blitzschnell in Markdown um.
-- 👁️ **Obsidian-Live-Vorschau**:
-  - **Vorschau-Tab**: Vollständig formatierte Ansicht mit Überschriften, Tabellen, Listen und Code-Blöcken.
-  - **Quellcode-Editor**: Quelltext direkt in der App bearbeiten oder per 1-Klick kopieren.
-- 📁 **Intelligente Obsidian-Vault-Integration**:
-  - **Feste Pfad-Hinterlegung**: Pfad zu deiner portablen SSD einmalig in den Einstellungen speichern.
-  - **Automatische Fächer-/Ordner-Erkennung**: Dropdown listet alle Unterordner (z. B. `Mathe`, `Informatik`, `Deutsch`, `Aufgaben`) auf für 1-Klick-Ablage.
-  - **"Speichern unter..." & Breite Save-Bar**: Komfortables Bearbeiten von Dateinamen ohne Textabschneiden.
-  - **Direktes Öffnen in Obsidian**: Nach dem Speichern kann die Notiz sofort über die Obsidian URI (`obsidian://open`) geöffnet werden.
+- 🖱️ **Windows Explorer Integration & Drag & Drop**:
+  - Konvertiere einzelne Dokumente oder ganze Ordner direkt per Rechtsklick aus dem Explorer.
+  - Multi-File Drag & Drop mit automatischer Dateierkennung und Queue-Verwaltung.
+- 📦 **Ordner-Unzip & Batch-Export**:
+  - Ganze Ordner rekursiv nach Dokumenten durchsuchen und mit einem Klick als Markdown entpacken/exportieren (unter Beibehaltung der Ordnerstruktur).
+- ⚡ **1-Klick-Konvertierung**:
+  - Unterstützt `.pdf`, `.docx`, `.doc`, `.pptx`, `.ppt`, `.xlsx`, `.xls`, `.csv`, `.txt`, `.html`, `.rtf`, `.epub`, `.xml`, `.json`.
+- 👁️ **Obsidian-Live-Vorschau & Split-Editor**:
+  - **Vorschau-Modus**: Vollständig gerenderte Notiz mit Tabellen, Überschriften, Listen und Codeblöcken.
+  - **Split-Modus**: Zeitgleiche Ansicht von Editor und Vorschau.
+  - **Quellcode-Modus**: Direkte Markdown-Bearbeitung mit Tastaturkürzeln.
+- 🌫️ **Sanfter Text-Auslauf (Fade-Mask)**:
+  - Text scrollt weich und organisch über CSS-Gradientenmasken oben und vor der Save-Bar ins Dunkle aus (keine harten Schnittkanten).
+- 📁 **Obsidian-Vault Integration & Routing**:
+  - **Freie Pfadlänge & Live-Erkennung**: Beliebig lange Pfade (z. B. auf externen SSDs) mit automatischer `.obsidian`-Validierung.
+  - **Schnellwechsel in Save-Bar**: Vault-Pfad direkt im Unterordner-Dropdown wechseln.
+  - **Vault-Routing**: Intelligente Fächer- und Themenzuordnung (`.markitui-routing.json`).
+  - **Direktes Öffnen in Obsidian**: Notizen sofort nach dem Speichern via Obsidian-URI öffnen.
 - 🏷️ **Automatisches YAML-Frontmatter**:
-  - Fügt automatisch Metadaten wie `title`, `created`, `source_file`, `subject` und `tags` (z. B. `#schule`, `#itslearning`) ein.
+  - Generiert konfigurierbare Metadaten (`title`, `created`, `source_file`, `subject`, `tags`).
 
 ---
 
@@ -47,10 +56,11 @@ Lade einfach die Installationsdatei herunter und starte das Setup:
 npm run dev
 ```
 
-### Windows Setup-Installer neu bauen
+### Windows Setup-Installer bauen
 ```bash
 npm run dist:installer
 ```
-Der fertige Installer liegt in `release/MarkItUI Setup 2.5.0.exe`.
+Der fertige Installer liegt in `release/MarkItUI Setup 2.6.0.exe`.
+
 
 
