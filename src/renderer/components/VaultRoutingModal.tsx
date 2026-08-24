@@ -157,7 +157,7 @@ export const VaultRoutingModal: React.FC<VaultRoutingModalProps> = ({
     const validRoutes = routes.filter((r) => r.label.trim() || r.targetFolder.trim());
     const routing: VaultRouting = {
       vaultName: vaultName,
-      description: 'MarkItDown Routing-Konfiguration – Zuordnung von Lehrern/Lernfeldern zu Ordnern. Diese Datei kann auch händisch bearbeitet werden.',
+      description: 'MarkItUI Routing-Konfiguration – Zuordnung von Lehrern/Lernfeldern zu Ordnern. Diese Datei kann auch händisch bearbeitet werden.',
       routes: validRoutes
     };
     onSave(routing);
@@ -187,7 +187,7 @@ export const VaultRoutingModal: React.FC<VaultRoutingModalProps> = ({
               <p className="routing-intro-sub">
                 Lege Zuordnungen an wie: <em>Lehrer → Ordner</em> oder <em>Lernfeld → Ordner</em>.
                 Jede Zuordnung kann Unterordner für Themen haben.
-                Die Konfiguration wird als <code>.markitdown-routing.json</code> im Vault gespeichert
+                Die Konfiguration wird als <code>.markitui-routing.json</code> im Vault gespeichert
                 und kann auch händisch bearbeitet werden.
               </p>
             </div>

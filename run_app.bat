@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-echo Starte MarkItDown for Obsidian...
+echo Starte MarkItUI...
 
 set "PY_CMD="
 

@@ -150,7 +150,15 @@ body {
   align-items: center;
   justify-content: center;
   margin-bottom: 24px;
+  overflow: hidden;
   transition: transform var(--dur-fast) var(--ease-spring-snappy), border-color var(--dur-fast) ease;
+}
+
+.onboarding-logo-img {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  object-fit: contain;
 }
 
 .onboarding-card:hover .onboarding-icon-wrap {
@@ -163,21 +171,18 @@ body {
   font-weight: 600;
   color: #ffffff;
   margin-bottom: 10px;
-  letter-spacing: -0.02em;
 }
 
 .onboarding-desc {
   font-size: 14px;
   color: var(--text-muted);
   line-height: 1.6;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
 }
 
 .onboarding-btn {
-  padding: 10px 24px !important;
-  font-size: 14px !important;
-  margin-bottom: 12px;
   width: 100%;
+  margin-bottom: 12px;
 }
 
 .onboarding-skip {
@@ -214,7 +219,7 @@ body {
 }
 
 /* ============================================================
-   TOPBAR
+   TOPBAR & BRANDING
    ============================================================ */
 .app-topbar {
   display: flex;
@@ -228,6 +233,35 @@ body {
   z-index: 30;
   gap: 12px;
   transition: background var(--dur-normal) ease;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px 4px 4px;
+  margin-right: 4px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.topbar-brand-logo {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  object-fit: contain;
+  transition: transform var(--dur-fast) var(--ease-spring-snappy);
+}
+
+.topbar-brand:hover .topbar-brand-logo {
+  transform: scale(1.1);
+}
+
+.topbar-brand-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
 }
 
 .topbar-left-tabs {

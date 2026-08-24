@@ -154,7 +154,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <div className="toggle-row">
             <div>
               <div className="toggle-label">Auto-Konvertierung bei Drop</div>
-              <div className="toggle-desc">Sofortige MarkItDown-Umwandlung</div>
+              <div className="toggle-desc">Sofortige MarkItUI-Umwandlung</div>
             </div>
             <input
               type="checkbox"

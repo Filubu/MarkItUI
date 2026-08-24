@@ -249,13 +249,18 @@ export function registerIpcHandlers(mainWindow: BrowserWindow) {
     }
   });
 
-  // Read .markitdown-routing.json from vault root
+  // Read .markitui-routing.json (or fallback .markitdown-routing.json) from vault root
   ipcMain.handle('get-vault-routing', async (_event, vaultPath: string): Promise<VaultRouting | null> => {
     if (!vaultPath) return null;
-    const routingPath = path.join(vaultPath, '.markitdown-routing.json');
+    const newRoutingPath = path.join(vaultPath, '.markitui-routing.json');
+    const legacyRoutingPath = path.join(vaultPath, '.markitdown-routing.json');
     try {
-      if (fs.existsSync(routingPath)) {
-        const data = fs.readFileSync(routingPath, 'utf-8');
+      if (fs.existsSync(newRoutingPath)) {
+        const data = fs.readFileSync(newRoutingPath, 'utf-8');
+        return JSON.parse(data) as VaultRouting;
+      }
+      if (fs.existsSync(legacyRoutingPath)) {
+        const data = fs.readFileSync(legacyRoutingPath, 'utf-8');
         return JSON.parse(data) as VaultRouting;
       }
     } catch (err) {
@@ -264,10 +269,10 @@ export function registerIpcHandlers(mainWindow: BrowserWindow) {
     return null;
   });
 
-  // Save .markitdown-routing.json to vault root (human-readable format)
+  // Save .markitui-routing.json to vault root (human-readable format)
   ipcMain.handle('save-vault-routing', async (_event, vaultPath: string, routing: VaultRouting): Promise<boolean> => {
     if (!vaultPath) return false;
-    const routingPath = path.join(vaultPath, '.markitdown-routing.json');
+    const routingPath = path.join(vaultPath, '.markitui-routing.json');
     try {
       fs.writeFileSync(routingPath, JSON.stringify(routing, null, 2), 'utf-8');
       return true;

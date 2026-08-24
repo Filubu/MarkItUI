@@ -5,6 +5,16 @@ Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/) 
 
 ---
 
+## [2.4.0] - 2026-08-24
+
+### Added
+- **Vollständiges Rebranding zu MarkItUI**: Umbenennung des gesamten Projekts, der Paket- und Anwendungsnamen, Fenstertitel, Skripte, Dokumentationen und Build-Konfigurationen in **MarkItUI**.
+- **Neues Obsidian Ethereal App-Logo**: Neues monochromes Logo (`app_logo.png`) im Obsidian-Stil, inklusive Multi-Auflösungs-Icons (`build/icon.ico`, `build/icon.png`, `public/app_logo.png`), nativer Windows-Einbindung und Branding im App-Header sowie Onboarding-Screen.
+- **MarkItUI Vault-Routing**: Unterstützung der Konfigurationsdatei `.markitui-routing.json` im Obsidian Vault Root mit nahtloser Abwärtskompatibilität zu `.markitdown-routing.json`.
+- **Neue Starter-Skripte**: Bereitstellung von `Start_MarkItUI.bat`.
+
+---
+
 ## [2.3.0] - 2026-08-24
 
 ### Added

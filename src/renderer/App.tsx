@@ -352,12 +352,12 @@ export const App: React.FC = () => {
         <div className="onboarding-screen">
           <div className="onboarding-card">
             <div className="onboarding-icon-wrap">
-              <FolderOpen size={28} color="#ffffff" />
+              <img src="app_logo.png" alt="MarkItUI" className="onboarding-logo-img" />
             </div>
-            <h1 className="onboarding-title">Obsidian Vault wählen</h1>
+            <h1 className="onboarding-title">MarkItUI</h1>
             <p className="onboarding-desc">
-              Wähle den Ordner deines Obsidian Vaults, um Dateien konvertieren
-              und direkt ablegen zu können.
+              Wähle den Ordner deines Obsidian Vaults, um Dokumente per Drag &amp; Drop
+              in Markdown umzuwandeln und direkt abzulegen.
             </p>
             <button className="btn-solid-white onboarding-btn" onClick={handleSelectVault}>
               <FolderOpen size={15} />

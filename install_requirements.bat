@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 echo ========================================================
-echo   MarkItDown to Obsidian - Installation der Requirements
+echo   MarkItUI - Installation der Requirements
 echo ========================================================
 echo.
 
@@ -67,7 +67,7 @@ if %ERRORLEVEL% equ 0 (
     echo ========================================================
     echo   [ERFOLG] Alle Requirements erfolgreich installiert!
     echo ========================================================
-    echo Du kannst die App jetzt mit 'Start_MarkItDown_Obsidian.bat' starten.
+    echo Du kannst die App jetzt mit 'Start_MarkItUI.bat' starten.
 ) else (
     echo.
     echo [FEHLER] Bei der Installation ist ein Fehler aufgetreten.

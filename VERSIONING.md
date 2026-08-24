@@ -25,6 +25,6 @@ Vor dem Erstellen eines neuen Windows Setup-Installers müssen immer folgende Sc
    - Kategorien: `Added` (Hinzugefügt), `Changed` (Geändert), `Fixed` (Behoben), `Removed` (Entfernt).
 3. **Erstellung des Installers**:
    - Befehl: `npm run dist:installer`
-   - `electron-builder` generiert automatisch: `release/MarkItDown for Obsidian Setup <version>.exe`.
+   - `electron-builder` generiert automatisch: `release/MarkItUI Setup <version>.exe`.
 4. **Verifikation**:
    - Prüfen, dass der Dateiname im `release/`-Ordner exakt der neuen Version entspricht.

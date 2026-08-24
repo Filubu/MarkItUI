@@ -5,7 +5,9 @@ node_modules/
 dist/
 dist-electron/
 release/
-build/
+build/*
+!build/icon.ico
+!build/icon.png
 *.exe
 *.dll
 *.pak

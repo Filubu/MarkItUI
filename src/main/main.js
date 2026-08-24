@@ -3,12 +3,14 @@ import path from 'path';
 import { registerIpcHandlers } from './ipcHandlers';
 var mainWindow = null;
 function createWindow() {
+    var iconPath = path.join(__dirname, '../build/icon.png');
     mainWindow = new BrowserWindow({
         width: 1200,
         height: 820,
         minWidth: 950,
         minHeight: 650,
-        title: 'MarkItDown for Obsidian',
+        title: 'MarkItUI',
+        icon: iconPath,
         backgroundColor: '#121217',
         show: false,
         autoHideMenuBar: true,

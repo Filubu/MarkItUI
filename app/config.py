@@ -40,9 +40,9 @@ class ConfigManager:
         # Otherwise use AppData
         appdata = os.getenv("APPDATA")
         if appdata:
-            path = Path(appdata) / "MarkItDownObsidian"
+            path = Path(appdata) / "MarkItUI"
         else:
-            path = Path.home() / ".markitdown_obsidian"
+            path = Path.home() / ".markitui"
         path.mkdir(parents=True, exist_ok=True)
         return path
 

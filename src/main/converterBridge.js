@@ -134,7 +134,7 @@ var ConverterBridge = /** @class */ (function () {
                                 resolve({
                                     success: false,
                                     markdown: '',
-                                    error: "MarkItDown Konvertierungsfehler (Exit Code ".concat(code, "):\n").concat(stderrData || 'Unbekannter Fehler'),
+                                    error: "MarkItUI Konvertierungsfehler (Exit Code ".concat(code, "):\n").concat(stderrData || 'Unbekannter Fehler'),
                                     fileName: path.basename(req.filePath)
                                 });
                                 return;

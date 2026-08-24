@@ -355,16 +355,21 @@ export function registerIpcHandlers(mainWindow) {
             return [2 /*return*/];
         });
     }); });
-    // Read .markitdown-routing.json from vault root
+    // Read .markitui-routing.json (or fallback .markitdown-routing.json) from vault root
     ipcMain.handle('get-vault-routing', function (_event, vaultPath) { return __awaiter(_this, void 0, void 0, function () {
-        var routingPath, data;
+        var newRoutingPath, legacyRoutingPath, data, data;
         return __generator(this, function (_a) {
             if (!vaultPath)
                 return [2 /*return*/, null];
-            routingPath = path.join(vaultPath, '.markitdown-routing.json');
+            newRoutingPath = path.join(vaultPath, '.markitui-routing.json');
+            legacyRoutingPath = path.join(vaultPath, '.markitdown-routing.json');
             try {
-                if (fs.existsSync(routingPath)) {
-                    data = fs.readFileSync(routingPath, 'utf-8');
+                if (fs.existsSync(newRoutingPath)) {
+                    data = fs.readFileSync(newRoutingPath, 'utf-8');
+                    return [2 /*return*/, JSON.parse(data)];
+                }
+                if (fs.existsSync(legacyRoutingPath)) {
+                    data = fs.readFileSync(legacyRoutingPath, 'utf-8');
                     return [2 /*return*/, JSON.parse(data)];
                 }
             }
@@ -374,13 +379,13 @@ export function registerIpcHandlers(mainWindow) {
             return [2 /*return*/, null];
         });
     }); });
-    // Save .markitdown-routing.json to vault root (human-readable format)
+    // Save .markitui-routing.json to vault root (human-readable format)
     ipcMain.handle('save-vault-routing', function (_event, vaultPath, routing) { return __awaiter(_this, void 0, void 0, function () {
         var routingPath;
         return __generator(this, function (_a) {
             if (!vaultPath)
                 return [2 /*return*/, false];
-            routingPath = path.join(vaultPath, '.markitdown-routing.json');
+            routingPath = path.join(vaultPath, '.markitui-routing.json');
             try {
                 fs.writeFileSync(routingPath, JSON.stringify(routing, null, 2), 'utf-8');
                 return [2 /*return*/, true];

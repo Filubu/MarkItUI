@@ -64,7 +64,7 @@ export interface VaultRoute {
   subRoutes?: VaultRoute[];
 }
 
-/** Vault routing config stored as .markitdown-routing.json in vault root */
+/** Vault routing config stored as .markitui-routing.json in vault root */
 export interface VaultRouting {
   vaultName: string;
   description: string;

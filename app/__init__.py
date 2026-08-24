@@ -1,6 +1,6 @@
 """
-MarkItDown to Obsidian Desktop Application
+MarkItUI Desktop Application
 """
 
-__version__ = "1.0.0"
-__app_name__ = "MarkItDown for Obsidian"
+__version__ = "2.4.0"
+__app_name__ = "MarkItUI"

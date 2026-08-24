@@ -112,7 +112,7 @@ def convert_document(file_path: str, add_frontmatter: bool = True, tags: list = 
 
 
 def main():
-    parser = argparse.ArgumentParser(description="MarkItDown CLI Worker for Electron App")
+    parser = argparse.ArgumentParser(description="MarkItUI CLI Worker for Electron App")
     parser.add_argument("--file", type=str, help="Pfad zur Quelldatei")
     parser.add_argument("--frontmatter", action="store_true", default=True, help="YAML Frontmatter generieren")
     parser.add_argument("--no-frontmatter", action="store_false", dest="frontmatter")

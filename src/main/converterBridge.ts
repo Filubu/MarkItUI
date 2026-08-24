@@ -99,7 +99,7 @@ export class ConverterBridge {
           resolve({
             success: false,
             markdown: '',
-            error: `MarkItDown Konvertierungsfehler (Exit Code ${code}):\n${stderrData || 'Unbekannter Fehler'}`,
+            error: `MarkItUI Konvertierungsfehler (Exit Code ${code}):\n${stderrData || 'Unbekannter Fehler'}`,
             fileName: path.basename(req.filePath)
           });
           return;

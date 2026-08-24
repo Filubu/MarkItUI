@@ -1,6 +1,6 @@
-# 🚀 MarkItDown for Obsidian
+# 🚀 MarkItUI
 
-Eine moderne, elegante Desktop-App (mit **Obsidian Dark Glassmorphism Theme**), die Schulunterlagen (.docx, .pdf, .pptx, .xlsx etc.) automatisch per **Microsoft MarkItDown** in saubere Markdown-Notizen umwandelt, eine Live-Vorschau bietet und sie mit einem Klick direkt in deinem **Obsidian-Vault** (z. B. auf deiner portablen SSD) ablegt.
+Eine moderne, elegante Desktop-App (mit **Obsidian Dark Glassmorphism Theme**), die Schulunterlagen (.docx, .pdf, .pptx, .xlsx etc.) automatisch per **MarkItUI** in saubere Markdown-Notizen umwandelt, eine Live-Vorschau bietet und sie mit einem Klick direkt in deinem **Obsidian-Vault** (z. B. auf deiner portablen SSD) ablegt.
 
 ---
 
@@ -8,7 +8,7 @@ Eine moderne, elegante Desktop-App (mit **Obsidian Dark Glassmorphism Theme**), 
 
 Lade einfach die Installationsdatei herunter und starte das Setup:
 
-👉 **[MarkItDown for Obsidian Setup 1.0.0.exe](file:///f:/vibecode_code/markitdown_tool/release/MarkItDown%20for%20Obsidian%20Setup%201.0.0.exe)**
+👉 **[MarkItUI Setup 2.4.0.exe](file:///c:/Users/filka/Documents/Code/markitdown_tool/release/MarkItUI%20Setup%202.4.0.exe)**
 
 ### Was der Installer macht:
 - 🖥️ **Windows Setup Assistent** mit freier Zielordner-Auswahl (z. B. auf deiner SSD oder Festplatte).
@@ -49,4 +49,5 @@ npm run dev
 ```bash
 npm run dist:installer
 ```
-Der fertige Installer liegt in `release/MarkItDown for Obsidian Setup 1.0.0.exe`.
+Der fertige Installer liegt in `release/MarkItUI Setup 2.4.0.exe`.
+
