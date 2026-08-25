@@ -113,7 +113,9 @@ if %ERRORLEVEL% equ 0 (
     echo ========================================================
     echo 3. Pruefe Systemdiagnose (Doctor)...
     echo ========================================================
-    if exist "%~dp0python_engine\markitdown_worker.py" (
+    if exist "%~dp0markitdown_worker.py" (
+        %PY_CMD% "%~dp0markitdown_worker.py" --doctor
+    ) else if exist "%~dp0python_engine\markitdown_worker.py" (
         %PY_CMD% "%~dp0python_engine\markitdown_worker.py" --doctor
     )
     echo.

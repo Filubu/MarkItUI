@@ -5,6 +5,22 @@ Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/) 
 
 ---
 
+## [2.6.7] - 2026-08-25
+
+### Added
+- **Intelligente & dynamische Python-Erkennung**: Erkennt alle Python-Versionen (3.9 bis 3.14+) in `%LOCALAPPDATA%`, `C:\Program Files`, Conda, Pyenv und `py -3` automatisch; filtert fehlerhafte Microsoft Store WindowsApps-Stubs zuverlässig aus.
+- **Multi-Engine Fallback-Architektur**: Unzerstörbare Konvertierungskette – falls MarkItDown fehlt oder bei einer Datei fehlschlägt, greifen automatisch spezialisierte Engines (`pdfplumber` & `pypdfium2` für PDF, `mammoth` & `python-docx` für Word, `python-pptx` für PowerPoint, `openpyxl` & CSV-Parser für Tabellen, Multi-Encoding-Reader für Textdateien).
+- **In-App Python & Konverter Doctor**: Neuer Diagnosebereich in den Einstellungen zur Live-Prüfung aller Voraussetzungen und Anzeige des erkannten Python-Pfades.
+- **1-Klick Voraussetzungen reparieren & installieren**: Direkte Hintergrund-Installation aller benötigten Python-Pakete per Klick in den Einstellungen sowie direkt im Fehlerfenster.
+- **Terminal-Setup-Skripte & Befehle**: Bereitstellung von `install_requirements.bat` (inkl. automatischer Python-Installation via `winget` bei Neugeräten), `install_requirements.ps1` für PowerShell sowie `npm run setup:python`.
+- **Terminal-Befehl-Kopierfunktion**: 1-Klick Kopieren des vollständigen Pip-Befehls in die Zwischenablage.
+
+### Fixed
+- **Paket-Auflösung in requirements.txt**: Beseitigung von restriktiven Pins und Konflikten bei `youtube-transcript-api` und `markitdown[all]`, wodurch Pip auf neuen Notebooks fehlschlagen konnte.
+- **Bündelung der Setup-Ressourcen**: `install_requirements.bat`, `install_requirements.ps1` und `requirements.txt` werden nun direkt im Windows Setup-Installer (`$INSTDIR`) mitgeliefert.
+
+---
+
 ## [2.6.0] - 2026-08-24
 
 ### Added

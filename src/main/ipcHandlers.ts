@@ -66,6 +66,21 @@ export function registerIpcHandlers(mainWindow: BrowserWindow) {
     return await ConverterBridge.convert(req, settings.customPythonPath);
   });
 
+  // Python Environment & Doctor Handlers
+  ipcMain.handle('check-python-environment', async (_event, customPath?: string) => {
+    const settings = loadSettings();
+    return await ConverterBridge.checkEnvironment(customPath || settings.customPythonPath);
+  });
+
+  ipcMain.handle('install-python-requirements', async (_event, customPath?: string) => {
+    const settings = loadSettings();
+    return await ConverterBridge.installRequirements(customPath || settings.customPythonPath);
+  });
+
+  ipcMain.handle('open-setup-script', async () => {
+    return await ConverterBridge.openSetupScript();
+  });
+
   // Dialog: Select Files
   ipcMain.handle('select-files', async () => {
     const result = await dialog.showOpenDialog(mainWindow, {

@@ -1,9 +1,28 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { ConversionRequest, ConversionResult, AppSettings, SaveNoteRequest, SaveNoteResult, FolderTreeNode, VaultRouting } from '../shared/types';
+import {
+  ConversionRequest,
+  ConversionResult,
+  AppSettings,
+  SaveNoteRequest,
+  SaveNoteResult,
+  FolderTreeNode,
+  VaultRouting,
+  PythonEnvironmentStatus,
+  InstallRequirementsResult
+} from '../shared/types';
 
 contextBridge.exposeInMainWorld('electronAPI', {
   convertDocument: (req: ConversionRequest): Promise<ConversionResult> =>
     ipcRenderer.invoke('convert-document', req),
+
+  checkPythonEnvironment: (customPythonPath?: string): Promise<PythonEnvironmentStatus> =>
+    ipcRenderer.invoke('check-python-environment', customPythonPath),
+
+  installPythonRequirements: (customPythonPath?: string): Promise<InstallRequirementsResult> =>
+    ipcRenderer.invoke('install-python-requirements', customPythonPath),
+
+  openSetupScript: (): Promise<boolean> =>
+    ipcRenderer.invoke('open-setup-script'),
 
   selectFiles: (): Promise<string[]> =>
     ipcRenderer.invoke('select-files'),
@@ -64,4 +83,3 @@ contextBridge.exposeInMainWorld('electronAPI', {
     };
   }
 });
-

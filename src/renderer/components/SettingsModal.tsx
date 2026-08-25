@@ -1,6 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { X, FolderOpen, FolderTree, CheckCircle2, AlertCircle } from 'lucide-react';
-import { AppSettings } from '../../shared/types';
+import {
+  X,
+  FolderOpen,
+  FolderTree,
+  CheckCircle2,
+  AlertCircle,
+  Wrench,
+  Terminal,
+  Copy,
+  Check,
+  RefreshCw,
+  Loader2,
+  Cpu
+} from 'lucide-react';
+import { AppSettings, PythonEnvironmentStatus } from '../../shared/types';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -24,6 +37,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [form, setForm] = useState<AppSettings>({ ...settings });
   const [tagsInput, setTagsInput] = useState<string>(settings.defaultTags.join(', '));
   const [dynamicIsVault, setDynamicIsVault] = useState<boolean>(isObsidianVault);
+  
+  // Environment Doctor State
+  const [envStatus, setEnvStatus] = useState<PythonEnvironmentStatus | null>(null);
+  const [isCheckingEnv, setIsCheckingEnv] = useState<boolean>(false);
+  const [isInstalling, setIsInstalling] = useState<boolean>(false);
+  const [copiedCmd, setCopiedCmd] = useState<boolean>(false);
+  const [installLog, setInstallLog] = useState<string>('');
 
   // Sync form when settings change externally
   useEffect(() => {
@@ -41,6 +61,40 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       setDynamicIsVault(false);
     }
   }, [form.vaultPath]);
+
+  // Check Python Environment on modal open
+  const runEnvCheck = async (customPath?: string) => {
+    if (!window.electronAPI || !window.electronAPI.checkPythonEnvironment) return;
+    setIsCheckingEnv(true);
+    try {
+      const status = await window.electronAPI.checkPythonEnvironment(customPath || form.customPythonPath);
+      setEnvStatus(status);
+    } catch (e: any) {
+      setEnvStatus({
+        isReady: false,
+        pythonFound: false,
+        pythonVersion: '',
+        pythonPath: '',
+        installedPackages: [],
+        missingPackages: ['python'],
+        hasMarkitdown: false,
+        hasPdfplumber: false,
+        hasMammoth: false,
+        hasPptx: false,
+        hasOpenpyxl: false,
+        error: e.message
+      });
+    } finally {
+      setIsCheckingEnv(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      runEnvCheck();
+      setInstallLog('');
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -60,6 +114,38 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     setForm({ ...form, vaultPath: cleaned });
   };
 
+  const handleInstallRequirements = async () => {
+    if (!window.electronAPI || !window.electronAPI.installPythonRequirements) return;
+    setIsInstalling(true);
+    setInstallLog('Installiere Pakete im Hintergrund (pip install)...');
+    try {
+      const res = await window.electronAPI.installPythonRequirements(form.customPythonPath);
+      if (res.success) {
+        setInstallLog('Installation erfolgreich abgeschlossen.');
+        await runEnvCheck();
+      } else {
+        setInstallLog(res.error || 'Fehler bei der Installation.');
+      }
+    } catch (err: any) {
+      setInstallLog(`Fehler: ${err.message}`);
+    } finally {
+      setIsInstalling(false);
+    }
+  };
+
+  const handleOpenSetupScript = async () => {
+    if (window.electronAPI && window.electronAPI.openSetupScript) {
+      await window.electronAPI.openSetupScript();
+    }
+  };
+
+  const handleCopyTerminalCommand = () => {
+    const cmd = 'pip install markitdown pdfplumber pypdfium2 pdfminer.six mammoth python-pptx openpyxl beautifulsoup4 puremagic markdown pygments';
+    navigator.clipboard.writeText(cmd);
+    setCopiedCmd(true);
+    setTimeout(() => setCopiedCmd(false), 2500);
+  };
+
   const handleSave = () => {
     const parsedTags = tagsInput
       .split(',')
@@ -67,10 +153,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       .filter(Boolean);
 
     const cleanVaultPath = form.vaultPath.replace(/^["']|["']$/g, '').trim();
+    const cleanPythonPath = form.customPythonPath ? form.customPythonPath.replace(/^["']|["']$/g, '').trim() : undefined;
 
     const updated: AppSettings = {
       ...form,
       vaultPath: cleanVaultPath,
+      customPythonPath: cleanPythonPath || undefined,
       defaultTags: parsedTags.length > 0 ? parsedTags : ['schule']
     };
 
@@ -89,6 +177,106 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         <div className="modal-content">
+          {/* Python Environment & Doctor Section */}
+          <div className="form-group env-doctor-group">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Cpu size={13} />
+                <span>Python &amp; Konverter-Voraussetzungen</span>
+              </label>
+              <button
+                type="button"
+                className="btn-glass"
+                style={{ padding: '3px 8px', fontSize: '11px' }}
+                onClick={() => runEnvCheck()}
+                disabled={isCheckingEnv}
+                title="Umgebung erneut prüfen"
+              >
+                {isCheckingEnv ? <Loader2 size={11} className="spin" /> : <RefreshCw size={11} />}
+                <span>Prüfen</span>
+              </button>
+            </div>
+
+            {/* Status Card */}
+            <div className="env-status-card">
+              {envStatus ? (
+                <>
+                  <div className="env-status-header">
+                    {envStatus.isReady ? (
+                      <div className="env-status-pill success">
+                        <CheckCircle2 size={12} />
+                        <span>Bereit (Python {envStatus.pythonVersion || 'aktiv'})</span>
+                      </div>
+                    ) : (
+                      <div className="env-status-pill warning">
+                        <AlertCircle size={12} />
+                        <span>Voraussetzungen unvollständig</span>
+                      </div>
+                    )}
+                    {envStatus.pythonPath && (
+                      <span className="env-path-label" title={envStatus.pythonPath}>
+                        {envStatus.pythonPath.length > 40
+                          ? '...' + envStatus.pythonPath.slice(-37)
+                          : envStatus.pythonPath}
+                      </span>
+                    )}
+                  </div>
+
+                  {envStatus.missingPackages && envStatus.missingPackages.length > 0 && (
+                    <div className="env-missing-info">
+                      Fehlend: {envStatus.missingPackages.join(', ')}
+                    </div>
+                  )}
+
+                  {installLog && (
+                    <div className="env-install-log">
+                      {installLog}
+                    </div>
+                  )}
+
+                  <div className="env-action-row">
+                    <button
+                      type="button"
+                      className="btn-solid-white env-action-btn"
+                      onClick={handleInstallRequirements}
+                      disabled={isInstalling}
+                    >
+                      {isInstalling ? <Loader2 size={12} className="spin" /> : <Wrench size={12} />}
+                      <span>{isInstalling ? 'Installiere...' : '1-Klick Pakete reparieren / installieren'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn-glass env-action-btn"
+                      onClick={handleCopyTerminalCommand}
+                      title="Befehl für cmd/PowerShell kopieren"
+                    >
+                      {copiedCmd ? <Check size={12} /> : <Copy size={12} />}
+                      <span>{copiedCmd ? 'Befehl kopiert!' : 'Terminal-Befehl kopieren'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn-glass env-action-btn"
+                      onClick={handleOpenSetupScript}
+                      title="Startet install_requirements.bat im Terminal"
+                    >
+                      <Terminal size={12} />
+                      <span>Setup-Skript</span>
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontSize: '12px' }}>
+                  <Loader2 size={12} className="spin" />
+                  <span>Prüfe Python-Installation...</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '2px 0' }} />
+
           {/* Vault Path */}
           <div className="form-group">
             <label className="form-label">Obsidian Vault Pfad (Speicherort)</label>
@@ -157,7 +345,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             />
           </div>
 
-          <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '4px 0' }} />
+          <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '2px 0' }} />
 
           {/* Switches */}
           <div className="toggle-row">

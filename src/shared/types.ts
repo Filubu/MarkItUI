@@ -12,6 +12,7 @@ export interface ConversionResult {
   error: string | null;
   fileName: string;
   charCount?: number;
+  engineUsed?: string;
 }
 
 export interface AppSettings {
@@ -92,10 +93,36 @@ export interface BatchExportResult {
   error?: string;
 }
 
+export interface PythonEnvironmentStatus {
+  isReady: boolean;
+  pythonFound: boolean;
+  pythonVersion: string;
+  pythonPath: string;
+  installedPackages: string[];
+  missingPackages: string[];
+  hasMarkitdown: boolean;
+  hasPdfplumber: boolean;
+  hasMammoth: boolean;
+  hasPptx: boolean;
+  hasOpenpyxl: boolean;
+  error?: string;
+}
+
+export interface InstallRequirementsResult {
+  success: boolean;
+  log: string;
+  error?: string;
+}
+
 export interface ElectronAPI {
   // Conversion
   convertDocument: (req: ConversionRequest) => Promise<ConversionResult>;
   
+  // Environment & Doctor
+  checkPythonEnvironment: (customPythonPath?: string) => Promise<PythonEnvironmentStatus>;
+  installPythonRequirements: (customPythonPath?: string) => Promise<InstallRequirementsResult>;
+  openSetupScript: () => Promise<boolean>;
+
   // Filesystem & Dialogs
   selectFiles: () => Promise<string[]>;
   selectDirectory: (title?: string) => Promise<string | null>;

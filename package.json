@@ -1,6 +1,6 @@
 {
   "name": "markitui",
-  "version": "2.6.0",
+  "version": "2.6.7",
   "description": "Moderne Desktop-App zur Konvertierung von Dokumenten in Obsidian Markdown per MarkItUI",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -8,6 +8,8 @@
     "build": "tsc && vite build && tsc -p tsconfig.node.json",
     "dist:win": "npm run build && electron-builder --win --dir",
     "dist:installer": "npm run build && electron-builder --win nsis --publish never",
+    "setup:python": "install_requirements.bat",
+    "setup:python:ps": "powershell -ExecutionPolicy Bypass -File install_requirements.ps1",
     "start": "electron ."
   },
   "keywords": [
@@ -55,6 +57,18 @@
       {
         "from": "python_engine",
         "to": "python_engine"
+      },
+      {
+        "from": "install_requirements.bat",
+        "to": "install_requirements.bat"
+      },
+      {
+        "from": "install_requirements.ps1",
+        "to": "install_requirements.ps1"
+      },
+      {
+        "from": "requirements.txt",
+        "to": "requirements.txt"
       }
     ],
     "win": {

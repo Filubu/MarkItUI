@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { marked } from 'marked';
-import { Copy, Check, Loader2, RefreshCw, X, FileText, Tag, Calendar, FileCode, Bookmark, SlidersHorizontal } from 'lucide-react';
+import { Copy, Check, Loader2, RefreshCw, X, FileText, Tag, Calendar, FileCode, Bookmark, SlidersHorizontal, Wrench, Terminal } from 'lucide-react';
 import { FileQueueItem } from '../../shared/types';
 
 // Configure marked
@@ -172,6 +172,35 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
     );
   }
 
+  const [isRepairing, setIsRepairing] = useState<boolean>(false);
+
+  const handleRepairPrerequisites = async () => {
+    if (!window.electronAPI || !window.electronAPI.installPythonRequirements) return;
+    setIsRepairing(true);
+    try {
+      const res = await window.electronAPI.installPythonRequirements();
+      if (res.success && currentFile) {
+        onConvertSingle(currentFile);
+      }
+    } catch (err) {
+      console.error('Reparatur fehlgeschlagen:', err);
+    } finally {
+      setIsRepairing(false);
+    }
+  };
+
+  const handleOpenSetupScript = async () => {
+    if (window.electronAPI && window.electronAPI.openSetupScript) {
+      await window.electronAPI.openSetupScript();
+    }
+  };
+
+  const isPrerequisiteError = useMemo(() => {
+    if (!currentFile?.error) return false;
+    const err = currentFile.error.toLowerCase();
+    return err.includes('python') || err.includes('paket') || err.includes('voraussetzung') || err.includes('no module named') || err.includes('import');
+  }, [currentFile?.error]);
+
   // Error state (Pure Monochromatic & Clean)
   if (currentFile.status === 'error') {
     return (
@@ -189,8 +218,29 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({
             {currentFile.error || 'Unerwarteter Fehler bei der Textextraktion'}
           </div>
 
-          <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
-            <button className="btn-solid-white" onClick={() => onConvertSingle(currentFile)}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px', marginTop: '4px' }}>
+            {isPrerequisiteError && (
+              <>
+                <button
+                  className="btn-solid-white"
+                  onClick={handleRepairPrerequisites}
+                  disabled={isRepairing}
+                >
+                  {isRepairing ? <Loader2 size={12} className="spin" /> : <Wrench size={12} />}
+                  <span>{isRepairing ? 'Installiere Pakete...' : '1-Klick Pakete reparieren'}</span>
+                </button>
+                <button
+                  className="btn-glass"
+                  onClick={handleOpenSetupScript}
+                  title="Startet install_requirements.bat"
+                >
+                  <Terminal size={12} />
+                  <span>Setup-Skript</span>
+                </button>
+              </>
+            )}
+
+            <button className={isPrerequisiteError ? "btn-glass" : "btn-solid-white"} onClick={() => onConvertSingle(currentFile)}>
               <RefreshCw size={12} /> Erneut versuchen
             </button>
             {onRemoveFile && (
