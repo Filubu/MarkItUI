@@ -14,7 +14,7 @@ Desktop-Anwendung zur automatisierten Konvertierung von Dokumenten in sauberes, 
 
 Die vorkompilierte Installationsdatei für Windows steht im Release-Bereich bereit:
 
-- **Download:** [MarkItUI Setup 2.7.0.exe](https://github.com/Filubu/MarkItUI/releases/latest/download/MarkItUI.Setup.2.7.0.exe)
+- **Download:** [MarkItUI Setup 2.7.1.exe](https://github.com/Filubu/MarkItUI/releases/latest/download/MarkItUI.Setup.2.7.1.exe)
 - **Release-Übersicht:** [GitHub Releases](https://github.com/Filubu/MarkItUI/releases)
 
 ### Setup-Funktionen
@@ -134,7 +134,7 @@ npm run dev
 ```bash
 npm run dist:installer
 ```
-Die kompilierte Installationsdatei wird im Verzeichnis `release/` abgelegt (`release/MarkItUI Setup 2.7.0.exe`).
+Die kompilierte Installationsdatei wird im Verzeichnis `release/` abgelegt (`release/MarkItUI Setup 2.7.1.exe`).
 
 ### Voraussetzungen prüfen
 ```bash

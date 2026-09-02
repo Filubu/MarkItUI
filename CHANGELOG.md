@@ -5,6 +5,13 @@ Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/) 
 
 ---
 
+## [2.7.1] - 2026-09-02
+
+### Fixed
+- **Hauptverzeichnis im Zielordner-Picker**: Die Save-Bar setzte als Standardauswahl den Anzeigetext „/ (Hauptverzeichnis)“ statt des internen Leerpfads. Dadurch wurde der Wurzeleintrag im Ordner-Picker nicht als ausgewählt markiert und im Knopf stand „ (Hauptverzeichnis)“ mit führendem Leerzeichen.
+
+---
+
 ## [2.7.0] - 2026-09-02
 
 ### Fixed
