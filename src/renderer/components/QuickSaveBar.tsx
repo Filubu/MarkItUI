@@ -46,10 +46,14 @@ export const QuickSaveBar: React.FC<QuickSaveBarProps> = ({
   }, [currentFile?.id]);
 
   useEffect(() => {
+    // Das Hauptverzeichnis wird intern als leerer Pfad geführt, damit der
+    // Ordner-Picker es korrekt als ausgewählt markiert.
+    const isRoot = (value: string) => !value || value === '/' || value === '/ (Hauptverzeichnis)';
+
     if (settings.defaultSubfolder && vaultSubfolders.includes(settings.defaultSubfolder)) {
-      setSelectedSubfolder(settings.defaultSubfolder);
+      setSelectedSubfolder(isRoot(settings.defaultSubfolder) ? '' : settings.defaultSubfolder);
     } else if (vaultSubfolders.length > 0) {
-      setSelectedSubfolder(vaultSubfolders[0]);
+      setSelectedSubfolder(isRoot(vaultSubfolders[0]) ? '' : vaultSubfolders[0]);
     }
   }, [settings.defaultSubfolder, vaultSubfolders]);
 
