@@ -13,6 +13,8 @@ export interface ConversionResult {
   fileName: string;
   charCount?: number;
   engineUsed?: string;
+  /** true, wenn der Fehler auf fehlende Python-Voraussetzungen zurückgeht */
+  missingPrerequisites?: boolean;
 }
 
 export interface AppSettings {
@@ -25,16 +27,20 @@ export interface AppSettings {
   customPythonPath?: string;
 }
 
+export type FileStatus = 'idle' | 'queued' | 'converting' | 'success' | 'error';
+
 export interface FileQueueItem {
   id: string;
   path: string;
   name: string;
   size: number;
   extension: string;
-  status: 'idle' | 'converting' | 'success' | 'error';
+  status: FileStatus;
   markdown?: string;
   error?: string;
   subject?: string;
+  /** Pfad relativ zum eingelesenen Wurzelordner (für Batch-Export mit Struktur) */
+  relativePath?: string;
 }
 
 export interface SaveNoteRequest {
@@ -105,13 +111,34 @@ export interface PythonEnvironmentStatus {
   hasMammoth: boolean;
   hasPptx: boolean;
   hasOpenpyxl: boolean;
+  hasDocx?: boolean;
+  /** Python-Version ist zu alt für die Konverter-Pakete (< 3.9) */
+  pythonTooOld?: boolean;
   error?: string;
+}
+
+export interface InstallProgressEvent {
+  stage: 'python' | 'pip' | 'packages' | 'verify' | 'done' | 'error';
+  message: string;
+  /** 0..100, falls abschätzbar */
+  percent?: number;
 }
 
 export interface InstallRequirementsResult {
   success: boolean;
   log: string;
   error?: string;
+  /** Zustand der Umgebung nach der Installation */
+  status?: PythonEnvironmentStatus;
+}
+
+export interface EnsurePythonResult {
+  success: boolean;
+  pythonPath: string;
+  log: string;
+  error?: string;
+  /** true, wenn Python in diesem Durchlauf neu installiert wurde */
+  installed?: boolean;
 }
 
 export interface ElectronAPI {
@@ -121,7 +148,9 @@ export interface ElectronAPI {
   // Environment & Doctor
   checkPythonEnvironment: (customPythonPath?: string) => Promise<PythonEnvironmentStatus>;
   installPythonRequirements: (customPythonPath?: string) => Promise<InstallRequirementsResult>;
+  ensurePythonInstalled: () => Promise<EnsurePythonResult>;
   openSetupScript: () => Promise<boolean>;
+  onInstallProgress: (callback: (event: InstallProgressEvent) => void) => () => void;
 
   // Filesystem & Dialogs
   selectFiles: () => Promise<string[]>;
@@ -148,6 +177,9 @@ export interface ElectronAPI {
   // External / CLI Events
   getInitialPaths: () => Promise<string[]>;
   onOpenExternalPaths: (callback: (paths: string[]) => void) => () => void;
+
+  /** Ermittelt den echten Dateipfad eines Drag&Drop-File-Objekts (Electron >= 32) */
+  getPathForFile: (file: File) => string;
 }
 
 declare global {

@@ -14,7 +14,7 @@ Desktop-Anwendung zur automatisierten Konvertierung von Dokumenten in sauberes, 
 
 Die vorkompilierte Installationsdatei für Windows steht im Release-Bereich bereit:
 
-- **Download:** [MarkItUI Setup 2.6.7.exe](https://github.com/Filubu/MarkItUI/releases/latest/download/MarkItUI.Setup.2.6.7.exe)
+- **Download:** [MarkItUI Setup 2.7.0.exe](https://github.com/Filubu/MarkItUI/releases/latest/download/MarkItUI.Setup.2.7.0.exe)
 - **Release-Übersicht:** [GitHub Releases](https://github.com/Filubu/MarkItUI/releases)
 
 ### Setup-Funktionen
@@ -28,10 +28,16 @@ Die vorkompilierte Installationsdatei für Windows steht im Release-Bereich bere
 
 ## Voraussetzungen & Terminal-Setup
 
-MarkItUI erkennt Python und alle Voraussetzungen auf Windows-Notebooks und PCs vollautomatisch. Falls auf einem neuen Gerät noch Pakete fehlen:
+MarkItUI erkennt Python und alle Voraussetzungen auf Windows-Notebooks und PCs vollautomatisch – **auch auf Geräten, auf denen noch gar kein Python installiert ist.**
 
-### 1-Klick über die App:
-In den Einstellungen oder bei Konvertierungsfehlern einfach auf **„1-Klick Pakete reparieren / installieren“** klicken.
+### 1-Klick über die App (empfohlen):
+Fehlt etwas, erscheint direkt in der App eine Hinweisleiste mit **„Jetzt automatisch einrichten“**. Ein Klick genügt:
+
+1. Fehlt Python komplett, installiert MarkItUI es selbst – über `winget` im Benutzerkonto (keine Adminrechte nötig) oder ersatzweise per Direkt-Download von python.org.
+2. Anschliessend werden alle Konverter-Pakete gruppenweise installiert; bei fehlenden Schreibrechten automatisch mit `--user`.
+3. Zum Schluss prüft die App die Installation und wandelt zuvor fehlgeschlagene Dateien automatisch erneut um.
+
+Der gleiche Knopf steht in den Einstellungen (**„1-Klick Pakete reparieren / installieren“**) und im Fehlerfenster zur Verfügung.
 
 ### Einfach über das Terminal:
 ```bash
@@ -52,20 +58,23 @@ install_requirements.bat
 ## Kernfunktionen
 
 ### 1. Multi-Engine Konvertierung & Fallbacks
-- **Tier 1 (MarkItDown):** Primäre Konvertierung via Microsoft MarkItDown.
-- **Tier 2 (Spezialisierte Fallbacks):**
-  - **PDF:** Layout- und Tabellenextraktion via `pdfplumber` / `pypdfium2` / `pdfminer`.
-  - **Word (`.docx`):** Strukturierte Extraktion via `mammoth` & `python-docx`.
-  - **PowerPoint (`.pptx`):** Folien, Aufzählungspunkte, Tabellen und Sprechernotizen via `python-pptx`.
-  - **Excel & Tabellen (`.xlsx`, `.csv`):** Tabellenblätter als Markdown-Tabellen via `openpyxl`.
-  - **Textdokumente:** Automatische Multi-Encoding-Erkennung (`UTF-8`, `CP1252`, `Latin-1`).
+Für jedes Format läuft eine Engine-Kette. Die spezialisierten Engines kommen zuerst (bessere Tabellen und Notizen, schnellerer Start), MarkItDown fängt alles Übrige ab:
+
+- **PDF:** `pdfplumber` (inkl. Tabellen) → `pypdfium2` → MarkItDown → `pdfminer`.
+- **Word (`.docx`):** `mammoth` → `python-docx` (inkl. Tabellen) → MarkItDown.
+- **PowerPoint (`.pptx`):** `python-pptx` mit Folien, Aufzählungen, Tabellen und Sprechernotizen → MarkItDown.
+- **Excel (`.xlsx`, `.xlsm`, `.xls`):** `openpyxl` bzw. `xlrd` als Markdown-Tabellen → MarkItDown.
+- **CSV/TSV, HTML, RTF, Text:** eigener CSV-Parser mit Trennzeichen-Erkennung, BeautifulSoup-Extraktion, RTF-Bereinigung, Multi-Encoding-Erkennung (`UTF-8`, `UTF-16`, `CP1252`, `Latin-1`).
+- **Selbstheilend:** Bringt eine defekte Systembibliothek eine Engine zum Absturz, wird sie erkannt, übersprungen und die nächste Engine übernimmt.
+- **Ehrliche Fehler:** Fehlt ein Paket, nennt die Meldung genau das fehlende Paket – statt unlesbaren Datenmüll auszugeben.
 
 ### 2. Windows Explorer Integration & Drag & Drop
 - **Dateikontextmenü:** Rechtsklick auf eine beliebige Dokumentdatei &rarr; *„Mit MarkItUI konvertieren“*. Startet oder fokussiert die Anwendung und führt die Umwandlung unmittelbar durch.
 - **Ordnerkontextmenü:** Rechtsklick auf ein Verzeichnis &rarr; *„Ordner mit MarkItUI umwandeln“*. Scannt den Ordner rekursiv nach allen unterstützten Dokumenttypen und reiht sie in die Konvertierungs-Queue ein.
 - **Single-Instance:** Wiederholte Aufrufe aus dem Explorer übergeben Pfade nahtlos an die bereits laufende Instanz.
 
-### 3. Batch-Verarbeitung & Ordner-Export
+### 3. Batch-Verarbeitung, Warteschlange & Ordner-Export
+- **Serielle Warteschlange:** Auch bei hunderten Dateien wird immer nur *ein* Dokument gleichzeitig umgewandelt – das Notebook bleibt flüssig bedienbar. Die Kopfzeile zeigt „x/y umgewandelt“ inklusive Abbrechen-Knopf.
 - **Massenexport:** Exportiert alle konvertierten Dokumente mit einem Klick in ein Zielverzeichnis.
 - **Strukturerhalt:** Übernimmt auf Wunsch die relative Ordnerhierarchie der Ursprungsdateien.
 
@@ -98,7 +107,7 @@ install_requirements.bat
 | :--- | :--- |
 | **Dokumente** | `.pdf`, `.docx`, `.doc`, `.rtf`, `.epub` |
 | **Präsentationen** | `.pptx`, `.ppt` |
-| **Tabellen & Daten** | `.xlsx`, `.xls`, `.csv` |
+| **Tabellen & Daten** | `.xlsx`, `.xlsm`, `.xls`, `.csv`, `.tsv` |
 | **Web & Text** | `.html`, `.htm`, `.txt`, `.xml`, `.json` |
 
 ---
@@ -126,6 +135,12 @@ npm run dev
 npm run dist:installer
 ```
 Die kompilierte Installationsdatei wird im Verzeichnis `release/` abgelegt (`release/MarkItUI Setup 2.7.0.exe`).
+
+### Voraussetzungen prüfen
+```bash
+# Diagnose des Python-Environments (zeigt fehlende Pakete)
+python python_engine/markitdown_worker.py --doctor
+```
 
 ---
 

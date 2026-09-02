@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, webUtils } from 'electron';
 import {
   ConversionRequest,
   ConversionResult,
@@ -8,7 +8,12 @@ import {
   FolderTreeNode,
   VaultRouting,
   PythonEnvironmentStatus,
-  InstallRequirementsResult
+  InstallRequirementsResult,
+  InstallProgressEvent,
+  EnsurePythonResult,
+  ScannedFileItem,
+  BatchExportItem,
+  BatchExportResult
 } from '../shared/types';
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -21,8 +26,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
   installPythonRequirements: (customPythonPath?: string): Promise<InstallRequirementsResult> =>
     ipcRenderer.invoke('install-python-requirements', customPythonPath),
 
+  ensurePythonInstalled: (): Promise<EnsurePythonResult> =>
+    ipcRenderer.invoke('ensure-python-installed'),
+
   openSetupScript: (): Promise<boolean> =>
     ipcRenderer.invoke('open-setup-script'),
+
+  onInstallProgress: (callback: (event: InstallProgressEvent) => void) => {
+    const handler = (_event: unknown, progress: InstallProgressEvent) => callback(progress);
+    ipcRenderer.on('install-progress', handler);
+    return () => {
+      ipcRenderer.removeListener('install-progress', handler);
+    };
+  },
 
   selectFiles: (): Promise<string[]> =>
     ipcRenderer.invoke('select-files'),
@@ -66,20 +82,32 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveSettings: (settings: AppSettings): Promise<boolean> =>
     ipcRenderer.invoke('save-settings', settings),
 
-  scanPaths: (paths: string[]) =>
+  scanPaths: (paths: string[]): Promise<ScannedFileItem[]> =>
     ipcRenderer.invoke('scan-paths', paths),
 
-  batchExport: (targetDir: string, items: any[]) =>
+  batchExport: (targetDir: string, items: BatchExportItem[]): Promise<BatchExportResult> =>
     ipcRenderer.invoke('batch-export', targetDir, items),
 
   getInitialPaths: (): Promise<string[]> =>
     ipcRenderer.invoke('get-initial-paths'),
 
   onOpenExternalPaths: (callback: (paths: string[]) => void) => {
-    const handler = (_event: any, paths: string[]) => callback(paths);
+    const handler = (_event: unknown, paths: string[]) => callback(paths);
     ipcRenderer.on('open-external-paths', handler);
     return () => {
       ipcRenderer.removeListener('open-external-paths', handler);
     };
+  },
+
+  /**
+   * Seit Electron 32 gibt es kein File.path mehr – der echte Pfad einer per Drag & Drop
+   * abgelegten Datei muss über webUtils ermittelt werden.
+   */
+  getPathForFile: (file: File): string => {
+    try {
+      return webUtils.getPathForFile(file);
+    } catch {
+      return '';
+    }
   }
 });

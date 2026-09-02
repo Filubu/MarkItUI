@@ -1,17 +1,25 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
-import { registerIpcHandlers, setInitialCliPaths } from './ipcHandlers';
+import fs from 'fs';
+import { registerIpcHandlers, setInitialCliPaths, appendInitialCliPaths } from './ipcHandlers';
 
 let mainWindow: BrowserWindow | null = null;
 
+/**
+ * Filtert echte Datei-/Ordnerpfade aus den Startargumenten (Explorer-Kontextmenü).
+ * Electron-Schalter und nicht existierende Pfade werden verworfen.
+ */
 function extractFilePathsFromArgv(argv: string[]): string[] {
-  const startIndex = app.isPackaged ? 1 : 2;
-  return argv.slice(startIndex).filter((arg) => {
-    if (!arg) return false;
-    if (arg.startsWith('--')) return false;
-    if (arg.startsWith('-')) return false;
-    if (arg === '.') return false;
-    return true;
+  return argv.slice(1).filter((arg) => {
+    if (!arg || arg.startsWith('-') || arg === '.') return false;
+    try {
+      if (!fs.existsSync(arg)) return false;
+      // Im Dev-Modus steht das Projektverzeichnis in argv – das ist kein Dokument.
+      if (!app.isPackaged && fs.statSync(arg).isDirectory()) return false;
+      return true;
+    } catch {
+      return false;
+    }
   });
 }
 
@@ -24,7 +32,7 @@ function createWindow() {
     minWidth: 950,
     minHeight: 650,
     title: 'MarkItUI',
-    icon: iconPath,
+    icon: fs.existsSync(iconPath) ? iconPath : undefined,
     backgroundColor: '#121217',
     show: false,
     autoHideMenuBar: true,
@@ -35,9 +43,6 @@ function createWindow() {
     }
   });
 
-  registerIpcHandlers(mainWindow);
-
-  // Load URL based on dev vs prod
   if (process.env.VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
   } else {
@@ -58,22 +63,35 @@ const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
   app.quit();
 } else {
-  const initialArgs = extractFilePathsFromArgv(process.argv);
-  setInitialCliPaths(initialArgs);
+  setInitialCliPaths(extractFilePathsFromArgv(process.argv));
 
   app.on('second-instance', (_event, commandLine) => {
+    const incomingPaths = extractFilePathsFromArgv(commandLine);
+
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.focus();
 
-      const incomingPaths = extractFilePathsFromArgv(commandLine);
       if (incomingPaths.length > 0) {
-        mainWindow.webContents.send('open-external-paths', incomingPaths);
+        if (mainWindow.webContents.isLoading()) {
+          // Fenster lädt noch – Pfade zwischenspeichern, der Renderer holt sie beim Start ab.
+          appendInitialCliPaths(incomingPaths);
+        } else {
+          mainWindow.webContents.send('open-external-paths', incomingPaths);
+        }
       }
+    } else if (incomingPaths.length > 0) {
+      appendInitialCliPaths(incomingPaths);
     }
   });
 
   app.whenReady().then(() => {
+    if (process.platform === 'win32') {
+      app.setAppUserModelId('com.markitui.app');
+    }
+
+    // Handler einmalig registrieren – nicht pro Fenster (sonst wirft ipcMain.handle).
+    registerIpcHandlers(() => mainWindow);
     createWindow();
 
     app.on('activate', () => {
@@ -89,4 +107,3 @@ app.on('window-all-closed', () => {
     app.quit();
   }
 });
-

@@ -5,6 +5,14 @@ node_modules/
 dist/
 dist-electron/
 release/
+
+# Von TypeScript erzeugte Artefakte (duerfen nicht eingecheckt werden:
+# vite.config.js wuerde sonst vite.config.ts ueberschatten)
+vite.config.js
+vite.config.d.ts
+*.tsbuildinfo
+src/shared/types.js
+src/shared/types.d.ts
 build/*
 !build/icon.ico
 !build/icon.png

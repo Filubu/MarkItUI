@@ -1,6 +1,6 @@
 {
   "name": "markitui",
-  "version": "2.6.7",
+  "version": "2.7.0",
   "description": "Moderne Desktop-App zur Konvertierung von Dokumenten in Obsidian Markdown per MarkItUI",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -72,7 +72,9 @@
       }
     ],
     "win": {
-      "target": ["nsis"],
+      "target": [
+        "nsis"
+      ],
       "icon": "build/icon.ico"
     },
     "nsis": {

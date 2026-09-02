@@ -5,6 +5,39 @@ Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/) 
 
 ---
 
+## [2.7.0] - 2026-09-02
+
+### Fixed
+- **Absturz beim Umwandeln behoben (Hauptursache der Fehler auf anderen Notebooks)**: In der Dokumentenvorschau wurden React-Hooks (`useState`, `useMemo`) erst *nach* bedingten Returns aufgerufen. Beim Statuswechsel `wartend → konvertiert → fertig` änderte sich dadurch die Hook-Anzahl, React brach mit Fehler #310 („Rendered more hooks than during the previous render") ab und die Oberfläche wurde komplett leer. Alle Hooks stehen jetzt vor jedem Return.
+- **Drag & Drop lieferte keine Dateipfade mehr**: Seit Electron 32 existiert `File.path` nicht mehr; abgelegte Dateien landeten mit blossem Dateinamen in der Warteschlange und schlugen mit „Datei existiert nicht" fehl. Die Pfade werden jetzt über `webUtils.getPathForFile()` ermittelt.
+- **Kein Datenmüll mehr als „erfolgreich"**: Konnte keine Engine ein Binärformat lesen, wurde die Datei früher als Text dekodiert und als Ergebnis ausgegeben. Jetzt kommt eine klare Meldung mit den fehlenden Paketen.
+- **Zerstörte Konverter-Antworten**: Ausgaben von Bibliotheken auf stdout (Warnungen von pdfminer & Co.) zerbrachen die JSON-Antwort des Workers. Die Antwort ist jetzt mit Markern eingerahmt, alle Fremdausgaben gehen auf stderr.
+- **Doppelte Dateien und Endlosschleifen beim Start**: Der Initialisierungs-Effekt lief bei jeder Einstellungs- oder Auswahländerung erneut und hängte die Explorer-Dateien immer wieder an. Er läuft jetzt genau einmal; Startpfade werden nur einmal ausgeliefert.
+- **Abstürze durch `ipcMain.handle`**: Die IPC-Handler wurden pro Fenster registriert und warfen beim zweiten Fenster einen Fehler. Registrierung erfolgt jetzt einmalig.
+- **Pfad-Ausbrüche beim Speichern**: Unterordner und Export-Pfade mit `..` konnten ausserhalb von Vault bzw. Zielordner schreiben. Zielpfade werden jetzt geprüft und eingegrenzt.
+- **XSS in der Vorschau**: Gerendertes Markdown wurde ungefiltert eingefügt. HTML aus konvertierten Dokumenten wird jetzt bereinigt (keine Skripte, keine Event-Handler, keine unsicheren URLs).
+- **Blockierte Schriftarten & CSP**: Die Google-Fonts-Einbindung wurde von der Content-Security-Policy blockiert (und brauchte Internet). Die App nutzt jetzt Systemschriften; die CSP ist enger gefasst.
+- **Ungültiges YAML-Frontmatter**: Titel mit Anführungszeichen erzeugten kaputte Metadaten – Werte werden jetzt korrekt escaped.
+- **Kaputte Hilfsskripte**: `run_app.bat` verwies auf ein nicht vorhandenes `app/main.py`. Ausserdem wurden erzeugte Build-Artefakte (`vite.config.js`, `types.js/.d.ts`, `*.tsbuildinfo`) aus dem Repository entfernt – `vite.config.js` überschattete die echte `vite.config.ts`.
+
+### Added
+- **Warteschlange statt Parallelbetrieb**: Dokumente werden strikt nacheinander umgewandelt – im Renderer *und* im Main-Prozess (dort über eine serialisierte Prozesskette). Vorher startete jede abgelegte Datei sofort einen eigenen Python-Prozess, was Notebooks ausgebremst hat. Neu: Fortschrittsanzeige „x/y umgewandelt", Wartepositionen und ein Abbrechen-Knopf.
+- **Vollautomatische Einrichtung – auch ohne vorhandenes Python**: Fehlt Python komplett, installiert MarkItUI es auf Wunsch selbst (winget im Benutzerkonto, ersatzweise Direkt-Download von python.org). Danach werden alle Pakete gruppenweise installiert, bei fehlenden Rechten automatisch mit `--user`.
+- **Setup-Banner mit Live-Fortschritt**: Fehlen Voraussetzungen, erscheint direkt in der App eine Leiste mit „Jetzt automatisch einrichten" samt Fortschrittsbalken; anschliessend werden fehlgeschlagene Dateien automatisch neu eingereiht.
+- **Absturzsichere Engine-Kette**: Bringt eine defekte native Bibliothek (z. B. beschädigtes `cryptography`/`cffi`) den Python-Prozess zum Absturz, erkennt MarkItUI die verursachende Engine, überspringt sie und wandelt mit der nächsten Engine um.
+- **Eigener Python-Pfad in den Einstellungen**: Frei konfigurierbar, falls die automatische Erkennung nicht passt.
+- **Neue Formate & bessere Ergebnisse**: `.xls` (über `xlrd`), `.xlsm`, `.tsv`, saubere HTML-Extraktion über BeautifulSoup, RTF-Bereinigung, Pipe-Escaping in Tabellen.
+
+### Changed
+- **Spezialisierte Engines zuerst**: PDF, Word, PowerPoint, Excel, CSV, HTML und Text laufen zuerst über die nativen Engines (bessere Tabellen und Notizen, deutlich schnellerer Start, da MarkItDown ein ML-Modell lädt). MarkItDown bleibt universeller Auffang-Konverter.
+- **Python-Erkennung ohne Blockade**: Die Suche lief bisher bei *jeder* Konvertierung synchron und blockierte den Hauptprozess bis zu 3 Sekunden. Sie läuft jetzt asynchron, parallel und wird zwischengespeichert; gefunden wird die neueste passende Version (bevorzugt ≥ 3.10).
+- **Zeitlimits & saubere Umgebung**: Jede Konvertierung hat ein Zeitlimit (wächst mit der Dateigrösse), fremde `PYTHONPATH`/`PYTHONHOME`-Einträge werden für Kindprozesse entfernt.
+- **Ordner-Scans blockieren die Oberfläche nicht mehr** (asynchron, mit Tiefen- und Mengenbegrenzung).
+- **Vollständige `requirements.txt`**: `markitdown` wird mit den nötigen Extras installiert (ohne sie kann es weder PDF noch Office-Dateien lesen), zusätzlich `python-docx` und `xlrd`.
+- **Weniger Toast-Flut**: Bei Stapeln erscheinen maximal zwei Einzelfehler plus eine Zusammenfassung.
+
+---
+
 ## [2.6.7] - 2026-08-25
 
 ### Added

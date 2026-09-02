@@ -39,8 +39,10 @@
   --radius-full: 9999px;
   
   /* Typography */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  /* Systemschriften: funktionieren auch offline und auf frisch aufgesetzten Notebooks */
+  --font-sans: 'Inter', 'Segoe UI Variable Text', 'Segoe UI', -apple-system, BlinkMacSystemFont,
+    Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Cascadia Mono', 'Fira Code', Consolas, 'Courier New', monospace;
 
   /* ============================================================
      FLUID MOTION DESIGN & SPRING PHYSICS SYSTEM
@@ -1920,4 +1922,115 @@ body {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* ============================================================
+   SETUP-BANNER & WARTESCHLANGE (v2.7.0)
+   ============================================================ */
+
+.setup-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 18px 10px;
+  padding: 10px 14px;
+  background: var(--glass-l1);
+  backdrop-filter: var(--glass-blur-l1);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  animation: fadeIn var(--dur-fast) var(--ease-spring-soft);
+}
+
+.setup-banner-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-main);
+}
+
+.setup-banner-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.setup-banner-title {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.setup-banner-detail {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.setup-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.setup-progress-track {
+  margin-top: 6px;
+  height: 3px;
+  width: 100%;
+  border-radius: var(--radius-full);
+  background: var(--bg-card-active);
+  overflow: hidden;
+}
+
+.setup-progress-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: var(--radius-full);
+  transition: width var(--dur-normal) var(--ease-fluid);
+}
+
+.queue-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  margin-right: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  animation: fadeIn var(--dur-fast) var(--ease-spring-soft);
+}
+
+.queue-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: color var(--dur-instant) var(--ease-fluid);
+}
+
+.queue-cancel-btn:hover {
+  color: var(--text-main);
+}
+
+/* Statuspunkt für wartende Dateien in den Tabs */
+.tab-status-dot.queued {
+  background: var(--text-dim);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.06);
 }

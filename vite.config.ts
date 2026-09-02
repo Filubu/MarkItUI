@@ -3,6 +3,14 @@ import react from '@vitejs/plugin-react';
 import electron from 'vite-plugin-electron';
 import renderer from 'vite-plugin-electron-renderer';
 import path from 'path';
+import { builtinModules } from 'module';
+
+// Node-Builtins duerfen im Main-Prozess nicht gebuendelt werden.
+const nodeExternals = [
+  'electron',
+  ...builtinModules,
+  ...builtinModules.map((m) => `node:${m}`)
+];
 
 export default defineConfig({
   plugins: [
@@ -14,7 +22,7 @@ export default defineConfig({
           build: {
             outDir: 'dist-electron',
             rollupOptions: {
-              external: ['electron', 'path', 'fs', 'child_process', 'os', 'url']
+              external: nodeExternals
             }
           }
         }
@@ -26,7 +34,10 @@ export default defineConfig({
         },
         vite: {
           build: {
-            outDir: 'dist-electron'
+            outDir: 'dist-electron',
+            rollupOptions: {
+              external: nodeExternals
+            }
           }
         }
       }

@@ -11,9 +11,10 @@ import {
   Check,
   RefreshCw,
   Loader2,
-  Cpu
+  Cpu,
+  Download
 } from 'lucide-react';
-import { AppSettings, PythonEnvironmentStatus } from '../../shared/types';
+import { AppSettings, PythonEnvironmentStatus, InstallProgressEvent } from '../../shared/types';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -23,6 +24,8 @@ interface SettingsModalProps {
   onClose: () => void;
   onSave: (newSettings: AppSettings) => void;
   onOpenRouting: () => void;
+  /** Meldet den aktuellen Zustand der Python-Umgebung an die App zurück */
+  onEnvStatusChange?: (status: PythonEnvironmentStatus) => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -32,7 +35,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   hasRouting,
   onClose,
   onSave,
-  onOpenRouting
+  onOpenRouting,
+  onEnvStatusChange
 }) => {
   const [form, setForm] = useState<AppSettings>({ ...settings });
   const [tagsInput, setTagsInput] = useState<string>(settings.defaultTags.join(', '));
@@ -44,6 +48,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [isInstalling, setIsInstalling] = useState<boolean>(false);
   const [copiedCmd, setCopiedCmd] = useState<boolean>(false);
   const [installLog, setInstallLog] = useState<string>('');
+  const [progress, setProgress] = useState<InstallProgressEvent | null>(null);
+
+  // Live-Fortschritt der Installation aus dem Main-Prozess
+  useEffect(() => {
+    if (!window.electronAPI?.onInstallProgress) return;
+    return window.electronAPI.onInstallProgress((event) => {
+      setProgress(event);
+      setInstallLog(event.message);
+    });
+  }, []);
 
   // Sync form when settings change externally
   useEffect(() => {
@@ -69,6 +83,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     try {
       const status = await window.electronAPI.checkPythonEnvironment(customPath || form.customPythonPath);
       setEnvStatus(status);
+      onEnvStatusChange?.(status);
     } catch (e: any) {
       setEnvStatus({
         isReady: false,
@@ -117,15 +132,38 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const handleInstallRequirements = async () => {
     if (!window.electronAPI || !window.electronAPI.installPythonRequirements) return;
     setIsInstalling(true);
-    setInstallLog('Installiere Pakete im Hintergrund (pip install)...');
+    setProgress(null);
+    setInstallLog('Einrichtung wird gestartet (installiert bei Bedarf auch Python)...');
     try {
       const res = await window.electronAPI.installPythonRequirements(form.customPythonPath);
+      if (res.status) {
+        setEnvStatus(res.status);
+        onEnvStatusChange?.(res.status);
+      }
       if (res.success) {
         setInstallLog('Installation erfolgreich abgeschlossen.');
-        await runEnvCheck();
       } else {
         setInstallLog(res.error || 'Fehler bei der Installation.');
       }
+      if (!res.status) {
+        await runEnvCheck();
+      }
+    } catch (err: any) {
+      setInstallLog(`Fehler: ${err.message}`);
+    } finally {
+      setIsInstalling(false);
+      setProgress(null);
+    }
+  };
+
+  const handleInstallPython = async () => {
+    if (!window.electronAPI?.ensurePythonInstalled) return;
+    setIsInstalling(true);
+    setInstallLog('Python wird installiert – das kann einige Minuten dauern...');
+    try {
+      const res = await window.electronAPI.ensurePythonInstalled();
+      setInstallLog(res.success ? `Python bereit: ${res.pythonPath}` : res.error || 'Python-Installation fehlgeschlagen.');
+      await runEnvCheck();
     } catch (err: any) {
       setInstallLog(`Fehler: ${err.message}`);
     } finally {
@@ -140,7 +178,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   const handleCopyTerminalCommand = () => {
-    const cmd = 'pip install markitdown pdfplumber pypdfium2 pdfminer.six mammoth python-pptx openpyxl beautifulsoup4 puremagic markdown pygments';
+    const cmd =
+      'pip install "markitdown[docx,pdf,pptx,xlsx,xls]" pdfplumber pypdfium2 pdfminer.six mammoth ' +
+      'python-docx python-pptx openpyxl xlrd beautifulsoup4 puremagic markdown pygments';
     navigator.clipboard.writeText(cmd);
     setCopiedCmd(true);
     setTimeout(() => setCopiedCmd(false), 2500);
@@ -228,13 +268,31 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     </div>
                   )}
 
-                  {installLog && (
-                    <div className="env-install-log">
-                      {installLog}
+                  {installLog && <div className="env-install-log">{installLog}</div>}
+
+                  {isInstalling && typeof progress?.percent === 'number' && (
+                    <div className="setup-progress-track">
+                      <div
+                        className="setup-progress-fill"
+                        style={{ width: `${Math.min(100, progress.percent)}%` }}
+                      />
                     </div>
                   )}
 
                   <div className="env-action-row">
+                    {!envStatus.pythonFound && (
+                      <button
+                        type="button"
+                        className="btn-solid-white env-action-btn"
+                        onClick={handleInstallPython}
+                        disabled={isInstalling}
+                        title="Installiert Python automatisch (winget oder python.org)"
+                      >
+                        {isInstalling ? <Loader2 size={12} className="spin" /> : <Download size={12} />}
+                        <span>Python automatisch installieren</span>
+                      </button>
+                    )}
+
                     <button
                       type="button"
                       className="btn-solid-white env-action-btn"
@@ -272,6 +330,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <span>Prüfe Python-Installation...</span>
                 </div>
               )}
+            </div>
+            {/* Eigener Python-Pfad (falls die automatische Erkennung daneben liegt) */}
+            <div className="form-group" style={{ marginTop: '10px' }}>
+              <label className="form-label">Eigener Python-Pfad (optional)</label>
+              <input
+                type="text"
+                className="form-input"
+                value={form.customPythonPath || ''}
+                onChange={(e) =>
+                  setForm({ ...form, customPythonPath: e.target.value.replace(/^["']|["']$/g, '').trim() })
+                }
+                placeholder="z. B. C:\\Users\\Name\\AppData\\Local\\Programs\\Python\\Python312\\python.exe"
+                spellCheck={false}
+              />
+              <div className="toggle-desc" style={{ marginTop: '4px' }}>
+                Leer lassen, damit MarkItUI Python automatisch findet.
+              </div>
             </div>
           </div>
 

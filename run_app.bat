@@ -2,41 +2,28 @@
 chcp 65001 >nul
 echo Starte MarkItUI...
 
-set "PY_CMD="
-
-if exist "%LOCALAPPDATA%\Python\bin\python.exe" (
-    "%LOCALAPPDATA%\Python\bin\python.exe" --version >nul 2>nul
-    if %ERRORLEVEL% equ 0 set "PY_CMD=%LOCALAPPDATA%\Python\bin\python.exe"
+:: Kompilierte App bevorzugen, sonst ueber Node/Electron starten
+if exist "%~dp0release\win-unpacked\MarkItUI.exe" (
+    start "" "%~dp0release\win-unpacked\MarkItUI.exe" %*
+    exit /b 0
 )
 
-if not defined PY_CMD (
-    for /d %%D in ("%LOCALAPPDATA%\Programs\Python\Python*") do (
-        if exist "%%D\python.exe" (
-            "%%D\python.exe" --version >nul 2>nul
-            if %ERRORLEVEL% equ 0 set "PY_CMD=%%D\python.exe"
-        )
-    )
-)
-
-if not defined PY_CMD (
-    py -3 --version >nul 2>nul
-    if %ERRORLEVEL% equ 0 set "PY_CMD=py -3"
-)
-
-if not defined PY_CMD (
-    python --version >nul 2>nul
-    if %ERRORLEVEL% equ 0 set "PY_CMD=python"
-)
-
-if not defined PY_CMD (
-    echo [FEHLER] Kein funktionierendes Python gefunden!
+where npm >nul 2>nul
+if %ERRORLEVEL% neq 0 (
+    echo [FEHLER] Node.js/npm wurde nicht gefunden.
+    echo Installiere Node.js von https://nodejs.org/ oder nutze das fertige Setup aus den Releases.
     pause
     exit /b 1
 )
 
-%PY_CMD% "%~dp0app\main.py" %*
+if not exist "%~dp0node_modules" (
+    echo [INFO] Installiere Node-Abhaengigkeiten...
+    call npm install
+)
+
+call npm start %*
 if %ERRORLEVEL% neq 0 (
     echo.
-    echo Fehler beim Ausfuehren der App.
+    echo Fehler beim Starten der App.
     pause
 )

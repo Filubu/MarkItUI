@@ -25,14 +25,21 @@ export const DropZone: React.FC<DropZoneProps> = ({ onFilesAdded }) => {
     e.stopPropagation();
     setIsDragActive(false);
 
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    if (droppedFiles.length > 0) {
-      const paths = droppedFiles
-        .map((f: any) => f.path || f.name)
-        .filter(Boolean);
-      if (paths.length > 0) {
-        onFilesAdded(paths);
-      }
+    // Seit Electron 32 gibt es File.path nicht mehr – der Pfad kommt über webUtils.
+    const paths = Array.from(e.dataTransfer.files)
+      .map((file) => {
+        try {
+          const viaApi = window.electronAPI?.getPathForFile?.(file);
+          if (viaApi) return viaApi;
+        } catch {
+          /* Fallback unten */
+        }
+        return (file as unknown as { path?: string }).path || '';
+      })
+      .filter(Boolean);
+
+    if (paths.length > 0) {
+      onFilesAdded(paths);
     }
   };
 
