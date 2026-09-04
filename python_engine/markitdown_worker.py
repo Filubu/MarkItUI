@@ -777,8 +777,11 @@ def convert_document(file_path: str, add_frontmatter: bool = True, tags=None,
                 "Bitte das PDF vorher mit einem OCR-Werkzeug (z. B. Adobe Acrobat, OCRmyPDF) durchsuchbar machen."
             )
         elif missing:
+            # Rohe Pip-Paketnamen (z. B. "pdfminer.six") sagen Nutzer:innen ohne Python-Kenntnisse
+            # nichts - die Kopfzeile bleibt daher beim verstaendlichen Format-Namen (z. B. "PDF-
+            # Dateien"). Die genauen Paketnamen stehen weiterhin im technischen Details-Block.
             error_msg = (
-                f"Fuer {label} fehlen Python-Pakete: {', '.join(missing)}.\n\n"
+                f"Fuer {label} fehlen noch ein paar Python-Pakete.\n\n"
                 'Klicke auf "1-Klick Pakete reparieren / installieren", dann klappt die Umwandlung.\n\n'
                 "Details:\n" + "\n".join(problems)
             )

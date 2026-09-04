@@ -15,6 +15,7 @@ import {
   Download
 } from 'lucide-react';
 import { AppSettings, PythonEnvironmentStatus, InstallProgressEvent } from '../../shared/types';
+import { summarizeMissingPackages } from '../utils/packageLabels';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -263,8 +264,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </div>
 
                   {envStatus.missingPackages && envStatus.missingPackages.length > 0 && (
-                    <div className="env-missing-info">
-                      Fehlend: {envStatus.missingPackages.join(', ')}
+                    <div className="env-missing-info" title={envStatus.missingPackages.join(', ')}>
+                      Fehlt für: {summarizeMissingPackages(envStatus.missingPackages)}
                     </div>
                   )}
 

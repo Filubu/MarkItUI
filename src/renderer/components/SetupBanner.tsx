@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { AlertCircle, Loader2, Wrench, Settings, X } from 'lucide-react';
 import { InstallProgressEvent, InstallRequirementsResult, PythonEnvironmentStatus } from '../../shared/types';
+import { summarizeMissingPackages } from '../utils/packageLabels';
 
 interface SetupBannerProps {
   status: PythonEnvironmentStatus | null;
@@ -52,7 +53,14 @@ export const SetupBanner: React.FC<SetupBannerProps> = ({ status, onRunSetup, on
       ? `Python ${status.pythonVersion} ist zu alt (mindestens 3.10 nötig)`
       : 'Es fehlen Konverter-Pakete';
 
-  const detail = status.missingPackages.length > 0 ? `Fehlend: ${status.missingPackages.join(', ')}` : status.error || '';
+  // Rohe Pip-Paketnamen (z. B. "pdfminer.six, beautifulsoup4, ...") sagen Nutzer:innen ohne
+  // Python-Kenntnisse nichts - stattdessen die betroffenen Dateiformate zusammenfassen. Die
+  // technische Liste bleibt als Tooltip erhalten, für alle, die es genau wissen wollen.
+  const detail =
+    status.missingPackages.length > 0
+      ? `Fehlt für: ${summarizeMissingPackages(status.missingPackages)}`
+      : status.error || '';
+  const detailTitle = status.missingPackages.length > 0 ? status.missingPackages.join(', ') : undefined;
 
   return (
     <div className="setup-banner">
@@ -62,7 +70,7 @@ export const SetupBanner: React.FC<SetupBannerProps> = ({ status, onRunSetup, on
 
       <div className="setup-banner-text">
         <div className="setup-banner-title">{isRunning ? 'Einrichtung läuft...' : headline}</div>
-        <div className="setup-banner-detail">
+        <div className="setup-banner-detail" title={isRunning ? undefined : detailTitle}>
           {isRunning ? progress?.message || 'Bitte warten...' : detail}
         </div>
         {isRunning && typeof progress?.percent === 'number' && (

@@ -5,6 +5,13 @@ Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/) 
 
 ---
 
+## [2.8.1] - 2026-09-04
+
+### Changed
+- **Verständlichere Fehlermeldungen statt roher Python-Paketnamen**: Das Setup-Banner, die Diagnose in den Einstellungen und die Fehleransicht beim Konvertieren zeigten technische pip-Paketnamen direkt an Endnutzer:innen (z. B. „Fehlend: markitdown, pdfplumber, pypdfium2, pdfminer.six, mammoth, python-docx, python-pptx, openpyxl, xlrd, beautifulsoup4, markdown, pygments") – im Setup-Banner zudem einzeilig abgeschnitten (`text-overflow: ellipsis`). Alle drei Stellen zeigen jetzt eine verständliche Zusammenfassung der betroffenen Dateiformate (z. B. „Fehlt für: PDF, Word, PowerPoint und Excel"); die vollständige technische Liste bleibt als Tooltip bzw. im Details-Block erhalten.
+
+---
+
 ## [2.8.0] - 2026-09-04
 
 ### Changed
