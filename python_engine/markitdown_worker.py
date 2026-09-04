@@ -29,15 +29,17 @@ JSON_END = "@@MARKITUI_JSON_END@@"
 ENGINE_MARKER = "@@MARKITUI_ENGINE@@"
 
 # Welche Pakete werden fuer welches Format gebraucht? (fuer verstaendliche Fehlermeldungen)
+# MarkItDown ist die primaere Engine und steht deshalb ueberall zuerst - die restlichen
+# Pakete sind die spezialisierten Fallback-Engines, die einspringen, falls MarkItDown scheitert.
 FORMAT_REQUIREMENTS = {
-    ".pdf": ("PDF-Dateien", ["pdfplumber", "pypdfium2", "pdfminer.six"]),
-    ".docx": ("Word-Dokumente", ["mammoth", "python-docx"]),
+    ".pdf": ("PDF-Dateien", ["markitdown", "pdfplumber", "pypdfium2", "pdfminer.six"]),
+    ".docx": ("Word-Dokumente", ["markitdown", "mammoth", "python-docx"]),
     ".doc": ("alte Word-Dokumente (.doc)", ["markitdown"]),
-    ".pptx": ("PowerPoint-Praesentationen", ["python-pptx"]),
+    ".pptx": ("PowerPoint-Praesentationen", ["markitdown", "python-pptx"]),
     ".ppt": ("alte PowerPoint-Dateien (.ppt)", ["markitdown"]),
-    ".xlsx": ("Excel-Tabellen", ["openpyxl"]),
-    ".xlsm": ("Excel-Tabellen mit Makros", ["openpyxl"]),
-    ".xls": ("alte Excel-Tabellen (.xls)", ["xlrd"]),
+    ".xlsx": ("Excel-Tabellen", ["markitdown", "openpyxl"]),
+    ".xlsm": ("Excel-Tabellen mit Makros", ["markitdown", "openpyxl"]),
+    ".xls": ("alte Excel-Tabellen (.xls)", ["markitdown", "xlrd"]),
     ".epub": ("E-Books", ["markitdown"]),
 }
 
@@ -123,9 +125,10 @@ def check_environment() -> dict:
     version = sys.version_info
     python_ok = (version.major, version.minor) >= (3, 9)
 
-    # "Bereit" heisst: alle Hauptformate koennen konvertiert werden - entweder ueber
-    # MarkItDown oder ueber die spezialisierten Fallback-Engines.
-    ready = python_ok and has_pdf and has_docx and has_pptx and has_xlsx
+    # "Bereit" heisst: alle Hauptformate koennen konvertiert werden. MarkItUI ist primaer
+    # eine Oberflaeche fuer MarkItDown - ist es (mit Extras) installiert, reicht das allein.
+    # Ohne MarkItDown braucht es stattdessen das komplette Set an Fallback-Engines.
+    ready = python_ok and (has_markitdown or (has_pdf and has_docx and has_pptx and has_xlsx))
 
     return {
         "ready": ready,
@@ -622,37 +625,40 @@ def convert_image_placeholder(path: Path) -> str:
 
 
 def engines_for(ext: str):
-    """Engine-Kette fuer einen Dateityp - spezialisierte Engines zuerst.
-
-    Die nativen Engines liefern bessere Tabellen/Notizen und starten deutlich
-    schneller als MarkItDown (das beim Import ein Machine-Learning-Modell laedt).
-    MarkItDown bleibt als universeller Auffang-Konverter am Ende der Kette.
+    """Engine-Kette fuer einen Dateityp - MarkItUI ist im Kern eine Oberflaeche fuer
+    Microsofts MarkItDown, daher ist MarkItDown fuer alle "echten" Dokumentformate
+    (PDF, Word, PowerPoint, Excel, CSV, HTML, RTF, Bilder) die primaere Engine.
+    Die spezialisierten Parser laufen nur noch als Fallback, falls MarkItDown fehlt
+    oder an einer Datei scheitert (z. B. weil sie beschaedigt ist). Fuer reine
+    Klartext-Dateien (.txt, .md, .json, ...) bleibt der Text-Decoder vorne, da dort
+    nichts zu "konvertieren" ist und MarkItDown dafuer nur unnoetig Zeit beim Laden
+    seiner Dateityp-Erkennung kosten wuerde.
     """
     if ext == ".pdf":
         return [
+            ("markitdown", convert_pdf_via_markitdown),
             ("pdfplumber", convert_pdf_plumber),
             ("pypdfium2", convert_pdf_pdfium),
-            ("markitdown", convert_pdf_via_markitdown),
             ("pdfminer", convert_pdf_pdfminer),
         ]
     if ext == ".docx":
         return [
+            ("markitdown", convert_with_markitdown),
             ("mammoth", convert_docx_mammoth),
             ("python-docx", convert_docx_python_docx),
-            ("markitdown", convert_with_markitdown),
         ]
     if ext == ".pptx":
-        return [("python-pptx", convert_pptx_fallback), ("markitdown", convert_with_markitdown)]
+        return [("markitdown", convert_with_markitdown), ("python-pptx", convert_pptx_fallback)]
     if ext in (".xlsx", ".xlsm"):
-        return [("openpyxl", convert_xlsx_fallback), ("markitdown", convert_with_markitdown)]
+        return [("markitdown", convert_with_markitdown), ("openpyxl", convert_xlsx_fallback)]
     if ext == ".xls":
-        return [("xlrd", convert_xls_fallback), ("markitdown", convert_with_markitdown)]
+        return [("markitdown", convert_with_markitdown), ("xlrd", convert_xls_fallback)]
     if ext in (".csv", ".tsv"):
-        return [("csv-parser", convert_csv_fallback), ("markitdown", convert_with_markitdown)]
+        return [("markitdown", convert_with_markitdown), ("csv-parser", convert_csv_fallback)]
     if ext in (".html", ".htm"):
-        return [("html-parser", convert_html_fallback), ("markitdown", convert_with_markitdown)]
+        return [("markitdown", convert_with_markitdown), ("html-parser", convert_html_fallback)]
     if ext == ".rtf":
-        return [("rtf-decoder", convert_rtf), ("markitdown", convert_with_markitdown)]
+        return [("markitdown", convert_with_markitdown), ("rtf-decoder", convert_rtf)]
     if ext in TEXT_EXTENSIONS:
         return [("text-decoder", convert_text), ("markitdown", convert_with_markitdown)]
     if ext in (".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp"):

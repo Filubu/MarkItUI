@@ -5,6 +5,17 @@ Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/) 
 
 ---
 
+## [2.8.0] - 2026-09-04
+
+### Changed
+- **MarkItDown ist jetzt immer die primäre Engine**: MarkItUI ist im Kern eine Oberfläche für Microsofts MarkItDown – bisher liefen für PDF, Word, PowerPoint, Excel, CSV, HTML und RTF aber zuerst die spezialisierten Parser (pdfplumber, mammoth, python-pptx, openpyxl, ...) und MarkItDown kam nur als Fallback zum Zug, wenn diese scheiterten. Jetzt wird für jedes dieser Formate immer zuerst MarkItDown versucht; die spezialisierten Parser sind der Fallback, falls MarkItDown fehlt oder an einer einzelnen Datei scheitert. Reine Klartext-Dateien (`.txt`, `.md`, `.json`, ...) bleiben beim direkten Text-Decoder, da dort nichts "konvertiert" werden muss.
+- **1-Klick-Einrichtung installiert MarkItDown zuerst**: Die Paketgruppen wurden entsprechend umgedreht – MarkItDown ist jetzt die Pflicht-Installation, die spezialisierten Fallback-Pakete sind optional.
+
+### Fixed
+- **Bereitschafts-Diagnose berücksichtigte MarkItDown gar nicht**: Der Code-Kommentar sagte "bereit heißt: über MarkItDown oder die Fallback-Engines", die tatsächliche Prüfung verlangte aber immer das komplette Fallback-Paket-Set, unabhängig davon, ob MarkItDown installiert war. Jetzt reicht MarkItDown (mit Extras) allein für den Status "bereit".
+
+---
+
 ## [2.7.2] - 2026-09-04
 
 ### Fixed
