@@ -29,15 +29,17 @@ JSON_END = "@@MARKITUI_JSON_END@@"
 ENGINE_MARKER = "@@MARKITUI_ENGINE@@"
 
 # Welche Pakete werden fuer welches Format gebraucht? (fuer verstaendliche Fehlermeldungen)
+# MarkItDown ist die primaere Engine und steht deshalb ueberall zuerst - die restlichen
+# Pakete sind die spezialisierten Fallback-Engines, die einspringen, falls MarkItDown scheitert.
 FORMAT_REQUIREMENTS = {
-    ".pdf": ("PDF-Dateien", ["pdfplumber", "pypdfium2", "pdfminer.six"]),
-    ".docx": ("Word-Dokumente", ["mammoth", "python-docx"]),
+    ".pdf": ("PDF-Dateien", ["markitdown", "pdfplumber", "pypdfium2", "pdfminer.six"]),
+    ".docx": ("Word-Dokumente", ["markitdown", "mammoth", "python-docx"]),
     ".doc": ("alte Word-Dokumente (.doc)", ["markitdown"]),
-    ".pptx": ("PowerPoint-Praesentationen", ["python-pptx"]),
+    ".pptx": ("PowerPoint-Praesentationen", ["markitdown", "python-pptx"]),
     ".ppt": ("alte PowerPoint-Dateien (.ppt)", ["markitdown"]),
-    ".xlsx": ("Excel-Tabellen", ["openpyxl"]),
-    ".xlsm": ("Excel-Tabellen mit Makros", ["openpyxl"]),
-    ".xls": ("alte Excel-Tabellen (.xls)", ["xlrd"]),
+    ".xlsx": ("Excel-Tabellen", ["markitdown", "openpyxl"]),
+    ".xlsm": ("Excel-Tabellen mit Makros", ["markitdown", "openpyxl"]),
+    ".xls": ("alte Excel-Tabellen (.xls)", ["markitdown", "xlrd"]),
     ".epub": ("E-Books", ["markitdown"]),
 }
 
@@ -123,9 +125,10 @@ def check_environment() -> dict:
     version = sys.version_info
     python_ok = (version.major, version.minor) >= (3, 9)
 
-    # "Bereit" heisst: alle Hauptformate koennen konvertiert werden - entweder ueber
-    # MarkItDown oder ueber die spezialisierten Fallback-Engines.
-    ready = python_ok and has_pdf and has_docx and has_pptx and has_xlsx
+    # "Bereit" heisst: alle Hauptformate koennen konvertiert werden. MarkItUI ist primaer
+    # eine Oberflaeche fuer MarkItDown - ist es (mit Extras) installiert, reicht das allein.
+    # Ohne MarkItDown braucht es stattdessen das komplette Set an Fallback-Engines.
+    ready = python_ok and (has_markitdown or (has_pdf and has_docx and has_pptx and has_xlsx))
 
     return {
         "ready": ready,
@@ -194,6 +197,87 @@ def strip_rtf(text: str) -> str:
     return re.sub(r"[ \t]{2,}", " ", cleaned).strip()
 
 
+_SENTENCE_END_RE = re.compile(r"[.!?:;…][\"'”’\)\]]*$")
+_LIST_OR_HEADING_RE = re.compile(r"^\s*([-*+•‣▪◦]|\d+[.)]|\|.*\||#{1,6}\s|>\s)")
+_LETTER_SPACED_WORD_RE = re.compile(r"(?:\b\w\s){3,}\w\b")
+
+
+def _collapse_letter_spacing(line: str) -> str:
+    """Manche PDF-Schriftarten liefern Buchstaben einzeln mit Leerzeichen dazwischen
+    ("W o r t" statt "Wort"). Erkennt solche Laufweiten-Artefakte und zieht sie zusammen."""
+    return _LETTER_SPACED_WORD_RE.sub(lambda m: m.group(0).replace(" ", ""), line)
+
+
+def reflow_pdf_text(text: str) -> str:
+    """Bereinigt typische PDF-Extraktionsartefakte bei Zeilen- und Wortabstaenden.
+
+    PDF-Engines liefern Text so, wie er auf der Seite umgebrochen wurde - jede
+    sichtbare Zeile endet mit einem Zeilenumbruch, unabhaengig davon, ob dort
+    tatsaechlich ein Satz oder Absatz endet. Da die Vorschau harte Zeilenumbrueche
+    als <br> rendert, wirkte importierter PDF-Text dadurch bisher wie eine Leiter
+    aus lauter kurzen Zeilen mit unregelmaessigen Abstaenden. Hier werden weich
+    umgebrochene Zeilen wieder zu Fliesstext zusammengefuehrt, Trennstriche am
+    Zeilenende entfernt und doppelte/unregelmaessige Leerzeichen normalisiert.
+    """
+    if not text or not text.strip():
+        return text
+
+    raw_lines = text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+    # Erst Laufweiten-Artefakte erkennen (solange ein groesserer Abstand zwischen echten
+    # Woertern noch von einfachen Buchstaben-Zwischenraeumen unterscheidbar ist), danach
+    # erst alle mehrfachen Leer-/Tabzeichen auf ein einzelnes Leerzeichen normalisieren.
+    lines = [_collapse_letter_spacing(ln.strip()) for ln in raw_lines]
+    lines = [re.sub(r"[ \t]{2,}", " ", ln) for ln in lines]
+
+    paragraphs = []
+    buffer = ""
+
+    def flush():
+        nonlocal buffer
+        if buffer:
+            paragraphs.append(buffer)
+            buffer = ""
+
+    for line in lines:
+        if not line:
+            flush()
+            if paragraphs and paragraphs[-1] != "":
+                paragraphs.append("")
+            continue
+
+        if _LIST_OR_HEADING_RE.match(line):
+            flush()
+            paragraphs.append(line)
+            continue
+
+        if not buffer:
+            buffer = line
+            continue
+
+        if buffer.endswith("-") and len(buffer) > 1 and buffer[-2].isalpha() and line[:1].islower():
+            # Trennstrich, der nur wegen des Zeilenumbruchs eingefuegt wurde: Wort zusammenziehen.
+            buffer = buffer[:-1] + line
+        elif _SENTENCE_END_RE.search(buffer):
+            # Zeile endet mit Satzzeichen -> vermutlich Absatzende, eigene Zeile behalten.
+            paragraphs.append(buffer)
+            buffer = line
+        else:
+            buffer += " " + line
+
+    flush()
+
+    result_lines = []
+    for line in paragraphs:
+        if line == "" and result_lines and result_lines[-1] == "":
+            continue
+        result_lines.append(line)
+
+    return "\n".join(result_lines).strip()
+
+
+NO_TEXT_LAYER_MARKER = "kein Text gefunden (evtl. ein reines Scan-PDF ohne Textebene)"
+
+
 def rows_to_markdown_table(rows) -> list:
     """Formatiert Zeilenlisten als Markdown-Tabelle (mit Pipe-Escaping)."""
     lines = []
@@ -235,7 +319,7 @@ def convert_pdf_plumber(path: Path) -> str:
                 tables = page.extract_tables()
             except Exception:
                 tables = []
-            text = page.extract_text() or ""
+            text = reflow_pdf_text(page.extract_text() or "")
 
             page_content = []
             if page_count > 1:
@@ -254,7 +338,7 @@ def convert_pdf_plumber(path: Path) -> str:
                 pages_text.append("\n\n".join(page_content))
 
     if not pages_text:
-        raise RuntimeError("kein Text gefunden (evtl. ein reines Scan-PDF ohne Textebene)")
+        raise RuntimeError(NO_TEXT_LAYER_MARKER)
     return "\n\n---\n\n".join(pages_text)
 
 
@@ -267,7 +351,7 @@ def convert_pdf_pdfium(path: Path) -> str:
         pages_text = []
         page_count = len(pdf)
         for idx in range(page_count):
-            text = pdf[idx].get_textpage().get_text_range()
+            text = reflow_pdf_text(pdf[idx].get_textpage().get_text_range())
             if text and text.strip():
                 if page_count > 1:
                     pages_text.append(f"### Seite {idx + 1}\n\n{text.strip()}")
@@ -280,7 +364,7 @@ def convert_pdf_pdfium(path: Path) -> str:
             pass
 
     if not pages_text:
-        raise RuntimeError("kein Text gefunden (evtl. ein reines Scan-PDF ohne Textebene)")
+        raise RuntimeError(NO_TEXT_LAYER_MARKER)
     return "\n\n---\n\n".join(pages_text)
 
 
@@ -288,9 +372,9 @@ def convert_pdf_pdfminer(path: Path) -> str:
     """PDF ueber pdfminer.six als letzte Reserve."""
     from pdfminer.high_level import extract_text
 
-    text = extract_text(str(path))
+    text = reflow_pdf_text(extract_text(str(path)) or "")
     if not text or not text.strip():
-        raise RuntimeError("kein Text gefunden (evtl. ein reines Scan-PDF ohne Textebene)")
+        raise RuntimeError(NO_TEXT_LAYER_MARKER)
     return text.strip()
 
 
@@ -522,6 +606,12 @@ def convert_with_markitdown(path: Path) -> str:
     return text
 
 
+def convert_pdf_via_markitdown(path: Path) -> str:
+    """MarkItDown als PDF-Fallback - nutzt intern ebenfalls pdfminer und hat damit
+    dieselben Zeilenumbruch-/Wortabstand-Artefakte wie die anderen PDF-Engines."""
+    return reflow_pdf_text(convert_with_markitdown(path))
+
+
 def convert_text(path: Path) -> str:
     return read_text_file_safe(path)
 
@@ -535,37 +625,40 @@ def convert_image_placeholder(path: Path) -> str:
 
 
 def engines_for(ext: str):
-    """Engine-Kette fuer einen Dateityp - spezialisierte Engines zuerst.
-
-    Die nativen Engines liefern bessere Tabellen/Notizen und starten deutlich
-    schneller als MarkItDown (das beim Import ein Machine-Learning-Modell laedt).
-    MarkItDown bleibt als universeller Auffang-Konverter am Ende der Kette.
+    """Engine-Kette fuer einen Dateityp - MarkItUI ist im Kern eine Oberflaeche fuer
+    Microsofts MarkItDown, daher ist MarkItDown fuer alle "echten" Dokumentformate
+    (PDF, Word, PowerPoint, Excel, CSV, HTML, RTF, Bilder) die primaere Engine.
+    Die spezialisierten Parser laufen nur noch als Fallback, falls MarkItDown fehlt
+    oder an einer Datei scheitert (z. B. weil sie beschaedigt ist). Fuer reine
+    Klartext-Dateien (.txt, .md, .json, ...) bleibt der Text-Decoder vorne, da dort
+    nichts zu "konvertieren" ist und MarkItDown dafuer nur unnoetig Zeit beim Laden
+    seiner Dateityp-Erkennung kosten wuerde.
     """
     if ext == ".pdf":
         return [
+            ("markitdown", convert_pdf_via_markitdown),
             ("pdfplumber", convert_pdf_plumber),
             ("pypdfium2", convert_pdf_pdfium),
-            ("markitdown", convert_with_markitdown),
             ("pdfminer", convert_pdf_pdfminer),
         ]
     if ext == ".docx":
         return [
+            ("markitdown", convert_with_markitdown),
             ("mammoth", convert_docx_mammoth),
             ("python-docx", convert_docx_python_docx),
-            ("markitdown", convert_with_markitdown),
         ]
     if ext == ".pptx":
-        return [("python-pptx", convert_pptx_fallback), ("markitdown", convert_with_markitdown)]
+        return [("markitdown", convert_with_markitdown), ("python-pptx", convert_pptx_fallback)]
     if ext in (".xlsx", ".xlsm"):
-        return [("openpyxl", convert_xlsx_fallback), ("markitdown", convert_with_markitdown)]
+        return [("markitdown", convert_with_markitdown), ("openpyxl", convert_xlsx_fallback)]
     if ext == ".xls":
-        return [("xlrd", convert_xls_fallback), ("markitdown", convert_with_markitdown)]
+        return [("markitdown", convert_with_markitdown), ("xlrd", convert_xls_fallback)]
     if ext in (".csv", ".tsv"):
-        return [("csv-parser", convert_csv_fallback), ("markitdown", convert_with_markitdown)]
+        return [("markitdown", convert_with_markitdown), ("csv-parser", convert_csv_fallback)]
     if ext in (".html", ".htm"):
-        return [("html-parser", convert_html_fallback), ("markitdown", convert_with_markitdown)]
+        return [("markitdown", convert_with_markitdown), ("html-parser", convert_html_fallback)]
     if ext == ".rtf":
-        return [("rtf-decoder", convert_rtf), ("markitdown", convert_with_markitdown)]
+        return [("markitdown", convert_with_markitdown), ("rtf-decoder", convert_rtf)]
     if ext in TEXT_EXTENSIONS:
         return [("text-decoder", convert_text), ("markitdown", convert_with_markitdown)]
     if ext in (".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp"):
@@ -624,6 +717,13 @@ def convert_document(file_path: str, add_frontmatter: bool = True, tags=None,
     used_engine = ""
     problems = []
     skip = skipped_engines()
+    # PDFs ohne Textebene (reine Scans) schlagen bei jeder Extraktions-Engine mit
+    # derselben Ursache fehl - keine der Engines kann OCR. Sobald zwei Engines das
+    # uebereinstimmend melden, lohnt es sich nicht mehr, auch noch MarkItDown (laedt
+    # ein ML-Modell) und pdfminer durchzuprobieren: das kostet nur Zeit/Speicher und
+    # aendert am Ergebnis nichts. Stattdessen wird sofort mit einer klaren Diagnose
+    # abgebrochen.
+    no_text_layer_hits = 0
 
     for name, engine in engines_for(ext):
         if name.lower() in skip:
@@ -642,6 +742,14 @@ def convert_document(file_path: str, add_frontmatter: bool = True, tags=None,
             continue
         except Exception as err:
             problems.append(f"{name}: {err}")
+            if ext == ".pdf" and str(err) == NO_TEXT_LAYER_MARKER:
+                no_text_layer_hits += 1
+                if no_text_layer_hits >= 2:
+                    problems.append(
+                        "Weitere Engines uebersprungen: uebereinstimmend keine Textebene gefunden "
+                        "(vermutlich ein gescanntes PDF, das OCR benoetigt)."
+                    )
+                    break
             continue
 
         if text and text.strip():
@@ -661,9 +769,19 @@ def convert_document(file_path: str, add_frontmatter: bool = True, tags=None,
     if not raw_text or not raw_text.strip():
         missing = missing_packages_for(ext)
         label = FORMAT_REQUIREMENTS.get(ext, ("diesen Dateityp", []))[0]
-        if missing:
+        if ext == ".pdf" and no_text_layer_hits >= 2 and not missing:
             error_msg = (
-                f"Fuer {label} fehlen Python-Pakete: {', '.join(missing)}.\n\n"
+                f"„{path.name}“ enthaelt keine Textebene - vermutlich ein gescanntes PDF "
+                "(nur Bilder der Seiten, kein eingebetteter Text).\n\n"
+                "MarkItUI kann daraus derzeit keinen Text extrahieren (keine OCR-Engine installiert). "
+                "Bitte das PDF vorher mit einem OCR-Werkzeug (z. B. Adobe Acrobat, OCRmyPDF) durchsuchbar machen."
+            )
+        elif missing:
+            # Rohe Pip-Paketnamen (z. B. "pdfminer.six") sagen Nutzer:innen ohne Python-Kenntnisse
+            # nichts - die Kopfzeile bleibt daher beim verstaendlichen Format-Namen (z. B. "PDF-
+            # Dateien"). Die genauen Paketnamen stehen weiterhin im technischen Details-Block.
+            error_msg = (
+                f"Fuer {label} fehlen noch ein paar Python-Pakete.\n\n"
                 'Klicke auf "1-Klick Pakete reparieren / installieren", dann klappt die Umwandlung.\n\n'
                 "Details:\n" + "\n".join(problems)
             )

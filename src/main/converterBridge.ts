@@ -37,10 +37,38 @@ const JSON_END = '@@MARKITUI_JSON_END@@';
 /** Der Worker meldet auf stderr, welche Engine er gerade startet. */
 const ENGINE_MARKER = '@@MARKITUI_ENGINE@@';
 
-/** Pakete, die die App zwingend braucht – bewusst in Gruppen, damit ein Fehler nicht alles abbricht. */
-const PACKAGE_GROUPS: Array<{ name: string; packages: string[]; required: boolean }> = [
+/** Fallback, falls die Installation von markitdown mit Extras scheitert (z. B. sehr neue Python-Version). */
+const MARKITDOWN_FALLBACK = ['markitdown'];
+
+/**
+ * Pakete, die die App zwingend braucht – bewusst in Gruppen, damit ein Fehler nicht alles abbricht.
+ * MarkItUI ist im Kern eine Oberflaeche fuer Microsofts MarkItDown: MarkItDown ist daher die
+ * primaere Engine fuer alle Formate und wird zuerst installiert. Die spezialisierten Parser
+ * (pdfplumber, mammoth, ...) sind nur noch der Fallback fuer den Fall, dass MarkItDown an einer
+ * einzelnen Datei scheitert – deshalb optional, damit ein fehlgeschlagenes Zusatzpaket die
+ * Einrichtung nicht komplett blockiert.
+ */
+const PACKAGE_GROUPS: Array<{
+  name: string;
+  packages: string[];
+  required: boolean;
+  /** Abgespeckter Installationsversuch, falls die volle Variante (z. B. mit Extras) scheitert. */
+  fallbackPackages?: string[];
+}> = [
   {
-    name: 'Basis-Konverter (PDF, Word, PowerPoint, Excel)',
+    name: 'MarkItDown-Engine (Microsoft)',
+    // Ohne Extras kann MarkItDown 0.1.x weder PDF noch Office-Dateien lesen.
+    packages: ['markitdown[docx,pdf,pptx,xlsx,xls]>=0.1.0'],
+    required: true,
+    fallbackPackages: MARKITDOWN_FALLBACK
+  },
+  {
+    name: 'Text- & Markdown-Werkzeuge',
+    packages: ['beautifulsoup4>=4.12.0', 'markdown>=3.5.0', 'pygments>=2.17.0', 'puremagic>=1.20'],
+    required: true
+  },
+  {
+    name: 'Fallback-Konverter (PDF, Word, PowerPoint, Excel)',
     packages: [
       'pdfplumber>=0.11.0',
       'pypdfium2>=4.30.0',
@@ -51,23 +79,9 @@ const PACKAGE_GROUPS: Array<{ name: string; packages: string[]; required: boolea
       'openpyxl>=3.1.0',
       'xlrd>=2.0.1'
     ],
-    required: true
-  },
-  {
-    name: 'Text- & Markdown-Werkzeuge',
-    packages: ['beautifulsoup4>=4.12.0', 'markdown>=3.5.0', 'pygments>=2.17.0', 'puremagic>=1.20'],
-    required: true
-  },
-  {
-    name: 'MarkItDown-Engine (Microsoft)',
-    // Ohne Extras kann MarkItDown 0.1.x weder PDF noch Office-Dateien lesen.
-    packages: ['markitdown[docx,pdf,pptx,xlsx,xls]>=0.1.0'],
     required: false
   }
 ];
-
-/** Fallback, falls die Installation von markitdown mit Extras scheitert (z. B. sehr neue Python-Version). */
-const MARKITDOWN_FALLBACK = ['markitdown'];
 
 /** Winget-Paket und Direkt-Download, falls auf dem Notebook noch gar kein Python existiert. */
 const WINGET_PACKAGE = 'Python.Python.3.12';
@@ -838,8 +852,8 @@ export class ConverterBridge {
       }
 
       // 3. Pakete gruppenweise installieren.
-      const failedRequired: string[] = [];
-      const failedOptional: string[] = [];
+      let failedRequired: string[] = [];
+      let failedOptional: string[] = [];
       const groupCount = PACKAGE_GROUPS.length;
 
       for (let i = 0; i < groupCount; i++) {
@@ -863,10 +877,14 @@ export class ConverterBridge {
         }
 
         // MarkItDown ohne Extras ist besser als gar kein MarkItDown.
-        if (anyFailed && !group.required) {
-          append('\n[MarkItUI] Versuche MarkItDown ohne Zusatz-Extras...\n');
-          const fallback = await this.pipInstall(target, MARKITDOWN_FALLBACK, append);
-          if (fallback.ok) failedOptional.length = 0;
+        if (anyFailed && group.fallbackPackages) {
+          append(`\n[MarkItUI] Versuche "${group.name}" mit reduziertem Funktionsumfang...\n`);
+          const fallback = await this.pipInstall(target, group.fallbackPackages, append);
+          if (fallback.ok) {
+            // Grundfunktion dieser Gruppe steht doch - zaehlt nicht mehr als Fehlschlag.
+            failedRequired = failedRequired.filter((pkg) => !group.packages.includes(pkg));
+            failedOptional = failedOptional.filter((pkg) => !group.packages.includes(pkg));
+          }
         }
       }
 

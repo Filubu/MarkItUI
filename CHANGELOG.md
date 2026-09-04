@@ -5,6 +5,35 @@ Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/) 
 
 ---
 
+## [2.8.1] - 2026-09-04
+
+### Changed
+- **Verständlichere Fehlermeldungen statt roher Python-Paketnamen**: Das Setup-Banner, die Diagnose in den Einstellungen und die Fehleransicht beim Konvertieren zeigten technische pip-Paketnamen direkt an Endnutzer:innen (z. B. „Fehlend: markitdown, pdfplumber, pypdfium2, pdfminer.six, mammoth, python-docx, python-pptx, openpyxl, xlrd, beautifulsoup4, markdown, pygments") – im Setup-Banner zudem einzeilig abgeschnitten (`text-overflow: ellipsis`). Alle drei Stellen zeigen jetzt eine verständliche Zusammenfassung der betroffenen Dateiformate (z. B. „Fehlt für: PDF, Word, PowerPoint und Excel"); die vollständige technische Liste bleibt als Tooltip bzw. im Details-Block erhalten.
+
+---
+
+## [2.8.0] - 2026-09-04
+
+### Changed
+- **MarkItDown ist jetzt immer die primäre Engine**: MarkItUI ist im Kern eine Oberfläche für Microsofts MarkItDown – bisher liefen für PDF, Word, PowerPoint, Excel, CSV, HTML und RTF aber zuerst die spezialisierten Parser (pdfplumber, mammoth, python-pptx, openpyxl, ...) und MarkItDown kam nur als Fallback zum Zug, wenn diese scheiterten. Jetzt wird für jedes dieser Formate immer zuerst MarkItDown versucht; die spezialisierten Parser sind der Fallback, falls MarkItDown fehlt oder an einer einzelnen Datei scheitert. Reine Klartext-Dateien (`.txt`, `.md`, `.json`, ...) bleiben beim direkten Text-Decoder, da dort nichts "konvertiert" werden muss.
+- **1-Klick-Einrichtung installiert MarkItDown zuerst**: Die Paketgruppen wurden entsprechend umgedreht – MarkItDown ist jetzt die Pflicht-Installation, die spezialisierten Fallback-Pakete sind optional.
+
+### Fixed
+- **Bereitschafts-Diagnose berücksichtigte MarkItDown gar nicht**: Der Code-Kommentar sagte "bereit heißt: über MarkItDown oder die Fallback-Engines", die tatsächliche Prüfung verlangte aber immer das komplette Fallback-Paket-Set, unabhängig davon, ob MarkItDown installiert war. Jetzt reicht MarkItDown (mit Extras) allein für den Status "bereit".
+
+---
+
+## [2.7.2] - 2026-09-04
+
+### Fixed
+- **Explorer-Kontextmenü konvertierte dieselbe Datei endlos**: Löste ein Rechtsklick → „Mit MarkItUI konvertieren" auf eine einzelne Datei mehrere `second-instance`-Events aus (oder wurde der Registry-Befehl aus anderem Grund mehrfach ausgelöst), reichte MarkItUI denselben Dateipfad jedes Mal erneut an die Warteschlange weiter und wandelte ihn wiederholt um – bei größeren PDFs konnte das durch die vielen parallel angestoßenen Python-Prozesse das Notebook überlasten/abstürzen lassen. Jeder von außen übergebene Dateipfad (Startargumente & second-instance) wird jetzt pro laufender Instanz nur noch ein einziges Mal weitergereicht.
+- **PDF-Vorschau: zerstückelte Zeilen- und Wortabstände**: PDF-Engines liefern Text so, wie er auf der Seite umgebrochen war – jede sichtbare Zeile endete mit einem harten Zeilenumbruch. Da die Vorschau (`breaks: true`) jeden Zeilenumbruch als `<br>` rendert, wirkten importierte PDFs bisher wie eine Leiter aus lauter kurzen Zeilen. Weich umgebrochene Zeilen werden jetzt wieder zu Fliesstext zusammengeführt, Trennstriche am Zeilenende entfernt („Bei-\nspiel" → „Beispiel") und doppelte/unregelmäßige Leerzeichen sowie einzeln auseinandergezogene Buchstaben („W o r t") normalisiert – Überschriften, Listen und Leerzeilen bleiben dabei erhalten.
+
+### Changed
+- **PDF-Konvertierungskette smarter**: Schlagen zwei PDF-Engines übereinstimmend mit „keine Textebene gefunden" fehl (typisch für gescannte PDFs ohne OCR), bricht die Kette jetzt sofort mit einer klaren, konkreten Fehlermeldung ab, statt zusätzlich noch MarkItDown (lädt ein ML-Modell) und pdfminer erfolglos durchzuprobieren – spart Zeit und Arbeitsspeicher bei Scan-PDFs.
+
+---
+
 ## [2.7.1] - 2026-09-02
 
 ### Fixed
