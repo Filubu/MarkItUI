@@ -603,6 +603,12 @@ def convert_with_markitdown(path: Path) -> str:
     return text
 
 
+def convert_pdf_via_markitdown(path: Path) -> str:
+    """MarkItDown als PDF-Fallback - nutzt intern ebenfalls pdfminer und hat damit
+    dieselben Zeilenumbruch-/Wortabstand-Artefakte wie die anderen PDF-Engines."""
+    return reflow_pdf_text(convert_with_markitdown(path))
+
+
 def convert_text(path: Path) -> str:
     return read_text_file_safe(path)
 
@@ -626,7 +632,7 @@ def engines_for(ext: str):
         return [
             ("pdfplumber", convert_pdf_plumber),
             ("pypdfium2", convert_pdf_pdfium),
-            ("markitdown", convert_with_markitdown),
+            ("markitdown", convert_pdf_via_markitdown),
             ("pdfminer", convert_pdf_pdfminer),
         ]
     if ext == ".docx":
