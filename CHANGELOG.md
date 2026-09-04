@@ -5,6 +5,17 @@ Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/) 
 
 ---
 
+## [2.7.2] - 2026-09-04
+
+### Fixed
+- **Explorer-Kontextmenü konvertierte dieselbe Datei endlos**: Löste ein Rechtsklick → „Mit MarkItUI konvertieren" auf eine einzelne Datei mehrere `second-instance`-Events aus (oder wurde der Registry-Befehl aus anderem Grund mehrfach ausgelöst), reichte MarkItUI denselben Dateipfad jedes Mal erneut an die Warteschlange weiter und wandelte ihn wiederholt um – bei größeren PDFs konnte das durch die vielen parallel angestoßenen Python-Prozesse das Notebook überlasten/abstürzen lassen. Jeder von außen übergebene Dateipfad (Startargumente & second-instance) wird jetzt pro laufender Instanz nur noch ein einziges Mal weitergereicht.
+- **PDF-Vorschau: zerstückelte Zeilen- und Wortabstände**: PDF-Engines liefern Text so, wie er auf der Seite umgebrochen war – jede sichtbare Zeile endete mit einem harten Zeilenumbruch. Da die Vorschau (`breaks: true`) jeden Zeilenumbruch als `<br>` rendert, wirkten importierte PDFs bisher wie eine Leiter aus lauter kurzen Zeilen. Weich umgebrochene Zeilen werden jetzt wieder zu Fliesstext zusammengeführt, Trennstriche am Zeilenende entfernt („Bei-\nspiel" → „Beispiel") und doppelte/unregelmäßige Leerzeichen sowie einzeln auseinandergezogene Buchstaben („W o r t") normalisiert – Überschriften, Listen und Leerzeilen bleiben dabei erhalten.
+
+### Changed
+- **PDF-Konvertierungskette smarter**: Schlagen zwei PDF-Engines übereinstimmend mit „keine Textebene gefunden" fehl (typisch für gescannte PDFs ohne OCR), bricht die Kette jetzt sofort mit einer klaren, konkreten Fehlermeldung ab, statt zusätzlich noch MarkItDown (lädt ein ML-Modell) und pdfminer erfolglos durchzuprobieren – spart Zeit und Arbeitsspeicher bei Scan-PDFs.
+
+---
+
 ## [2.7.1] - 2026-09-02
 
 ### Fixed

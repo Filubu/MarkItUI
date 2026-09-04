@@ -23,6 +23,33 @@ function extractFilePathsFromArgv(argv: string[]): string[] {
   });
 }
 
+/**
+ * Verhindert, dass dieselbe Datei aus dem Explorer-Kontextmenü mehrfach automatisch
+ * eingereiht und konvertiert wird. Windows kann den Registry-Befehl für einen einzigen
+ * Rechtsklick unter Umständen mehrfach auslösen (z. B. wenn mehrere "second-instance"-
+ * Events kurz hintereinander eintreffen) – ohne diese Sperre wurde dieselbe Datei dann
+ * jedes Mal erneut in die Warteschlange gestellt und immer wieder konvertiert, bis das
+ * Notebook durch die vielen parallel angestoßenen Python-Prozesse überlastet war.
+ * Pro laufender Instanz wird jeder Pfad daher nur ein einziges Mal weitergereicht.
+ */
+const deliveredExternalPaths = new Set<string>();
+
+function dedupeExternalPaths(paths: string[]): string[] {
+  const fresh: string[] = [];
+  for (const rawPath of paths) {
+    let key: string;
+    try {
+      key = path.resolve(rawPath).toLowerCase();
+    } catch {
+      key = rawPath.toLowerCase();
+    }
+    if (deliveredExternalPaths.has(key)) continue;
+    deliveredExternalPaths.add(key);
+    fresh.push(rawPath);
+  }
+  return fresh;
+}
+
 function createWindow() {
   const iconPath = path.join(__dirname, '../build/icon.png');
 
@@ -63,10 +90,10 @@ const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
   app.quit();
 } else {
-  setInitialCliPaths(extractFilePathsFromArgv(process.argv));
+  setInitialCliPaths(dedupeExternalPaths(extractFilePathsFromArgv(process.argv)));
 
   app.on('second-instance', (_event, commandLine) => {
-    const incomingPaths = extractFilePathsFromArgv(commandLine);
+    const incomingPaths = dedupeExternalPaths(extractFilePathsFromArgv(commandLine));
 
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
